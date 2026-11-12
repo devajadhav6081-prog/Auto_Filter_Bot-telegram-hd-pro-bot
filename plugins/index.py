@@ -18,7 +18,7 @@ lock = asyncio.Lock()
 @Client.on_callback_query(filters.regex(r'^index'))
 async def index_files(client, query):
     if query.data.startswith('index_cancel'):
-        temp.CANCEL = False
+        temp.CANCEL = True 
         return await query.answer("Cancelling Indexing")
     _, dream, chat, lst_msg_id, from_user = query.data.split("#")
     if dream == 'reject':
