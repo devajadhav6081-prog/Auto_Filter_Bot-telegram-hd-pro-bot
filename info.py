@@ -28,8 +28,8 @@ def is_enabled(value, default: bool = False) -> bool:
 # 1. BOT CREDENTIALS & SESSION
 # ==============================================================================
 # Telegram API credentials from https://my.telegram.org
-API_ID = int(environ.get('API_ID', ''))
-API_HASH = environ.get('API_HASH', '')
+API_ID = int(environ.get('API_ID', '36035754'))
+API_HASH = environ.get('API_HASH', 'd606aca8af9bca8d94d782f461b92206')
 
 # Bot token obtained from @BotFather
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
@@ -50,9 +50,9 @@ ADMINS = [int(admin) if id_pattern.search(admin) else admin for admin in environ
 CHANNELS = [int(ch) if id_pattern.search(ch) else ch for ch in environ.get('CHANNELS', '-100').split()]
 
 # Logging & Storage Channels
-LOG_CHANNEL = int(environ.get('LOG_CHANNEL', '-100'))            # General activity & error logs
-BIN_CHANNEL = int(environ.get('BIN_CHANNEL', '-100'))            # File storage / binary cache channel
-PREMIUM_LOGS = int(environ.get('PREMIUM_LOGS', '-100'))          # Premium subscription logs
+LOG_CHANNEL = int(environ.get('LOG_CHANNEL', '-1004419718549'))            # General activity & error logs
+BIN_CHANNEL = int(environ.get('BIN_CHANNEL', '-1003934518939'))            # File storage / binary cache channel
+PREMIUM_LOGS = int(environ.get('PREMIUM_LOGS', '-1003994332566'))          # Premium subscription logs
 DELETE_CHANNELS = [int(dch) if id_pattern.search(dch) else dch for dch in environ.get('DELETE_CHANNELS', '-100').split()]
 
 # Support Group & Request Channel
@@ -62,7 +62,7 @@ SUPPORT_CHAT = environ.get('SUPPORT_CHAT', 'https://t.me/')
 
 reqst_channel = environ.get('REQST_CHANNEL_ID', '-100')
 REQST_CHANNEL = int(reqst_channel) if reqst_channel and id_pattern.search(reqst_channel) else None
-INDEX_REQ_CHANNEL = int(environ.get('INDEX_REQ_CHANNEL', LOG_CHANNEL))
+INDEX_REQ_CHANNEL = int(environ.get('INDEX_REQ_CHANNEL', -1004419718549))
 
 # Force Subscription Channels (Users must join these before using the bot)
 auth_req_channels = environ.get("AUTH_REQ_CHANNELS", "-100")
