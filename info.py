@@ -62,7 +62,7 @@ SUPPORT_CHAT = environ.get('SUPPORT_CHAT', 'https://t.me/')
 
 reqst_channel = environ.get('REQST_CHANNEL_ID', '-100')
 REQST_CHANNEL = int(reqst_channel) if reqst_channel and id_pattern.search(reqst_channel) else None
-INDEX_REQ_CHANNEL = int(environ.get('INDEX_REQ_CHANNEL', -1004419718549))
+INDEX_REQ_CHANNEL = int(environ.get('INDEX_REQ_CHANNEL', -1003775721605))
 
 # Force Subscription Channels (Users must join these before using the bot)
 auth_req_channels = environ.get("AUTH_REQ_CHANNELS", "-100")
