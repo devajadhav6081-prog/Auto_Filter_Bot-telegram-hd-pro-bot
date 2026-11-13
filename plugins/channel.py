@@ -1,4 +1,5 @@
 import re
+import random
 import logging
 import asyncio
 from datetime import datetime
@@ -363,7 +364,13 @@ async def send_movie_update(client, base_name):
             text = generate_movie_message(movie_doc, base_name)
             buttons = InlineKeyboardMarkup([[
                 InlineKeyboardButton(
-                    '▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
+                    random.choice([
+                    '🔴 ▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
+                    '🔵 ▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
+                    '🟢 ▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
+                    '🟣 ▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
+                    '🟡 ▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ'
+                ]),
                     url=f"https://t.me/{temp.U_NAME}?start=getfile-{base_name.replace(' ', '-')}"
                 )
             ]])
@@ -424,7 +431,13 @@ async def update_movie_message(client, base_name):
         text = generate_movie_message(movie_doc, base_name)
         buttons = InlineKeyboardMarkup([[
             InlineKeyboardButton(
-                '▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
+                random.choice([
+                    '🔴 ▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
+                    '🔵 ▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
+                    '🟢 ▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
+                    '🟣 ▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
+                    '🟡 ▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ'
+                ]),
                 url=f"https://t.me/{temp.U_NAME}?start=getfile-{base_name.replace(' ', '-')}"
             )
         ]])
