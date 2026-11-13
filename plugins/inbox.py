@@ -15,7 +15,7 @@ CLOSED_TEXT = (
 )
 
 
-@Client.on_message(filters.private & ~filters.user(ADMINS) & ~filters.command(["start", "help", "id"]))
+@Client.on_message(filters.private & ~filters.user(ADMINS) & ~filters.regex(r"^/"))
 async def receive_user_inbox(client, message):
     user = message.from_user
     if not user:
