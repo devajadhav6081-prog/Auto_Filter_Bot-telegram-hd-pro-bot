@@ -42,18 +42,9 @@ async def admin_panel(client, message):
     await message.reply_text(text, reply_markup=_admin_markup())
 
 
-@Client.on_callback_query(filters.regex(r"^admin_(stats|users_[0-9]+|premium|inbox|commands|system|back|command_.*)$") & filters.user(ADMINS))
+@Client.on_callback_query(filters.regex(r"^admin_(stats|users_[0-9]+|premium|commands|system|back|command_.*)$") & filters.user(ADMINS))
 async def admin_panel_callbacks(client, query):
     data = query.data
-
-    if data == "admin_inbox":
-        open_count = await db.db.inbox.count_documents({"status": "open"})
-        return await query.message.edit_text(
-            "<b>📥 INBOX</b>\\n\\n"
-            f"Open conversations: <code>{open_count}</code>\\n\\n"
-            "New user messages will arrive directly in your admin chat. Use Reply or Close Inbox on each message.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="admin_back")]])
-        )
 
     if data == "admin_commands":
         rows = ["<b>📚 BOT COMMANDS</b>\\n"]
