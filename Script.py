@@ -277,12 +277,12 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
 
 ✨ ᴛɪᴛʟᴇ : <code>{filename} {year}</code>
 ─┉─•✦•─┉─
-🎭 ɢᴇɴʀᴇs : <b>{genres}</b>
+<blockquote>🎭 ɢᴇɴʀᴇs : <b>{genres}</b>
 🍿 ᴏᴛᴛ : <b>{ott}</b>
 ⏱️ ʀᴜɴᴛɪᴍᴇ : <b>N/A</b>
 🎬 ǫᴜᴀʟɪᴛʏ : <b>{quality}</b>
 🔉 ᴀᴜᴅɪᴏ : <b>{language}</b>
-🌟 ʀᴀᴛɪɴɢ : <b>{rating}/10</b>
+🌟 ʀᴀᴛɪɴɢ : <b>{rating}/10</b></blockquote>
 {episodes}
 ─┉─•✦•─┉─
 
