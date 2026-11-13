@@ -41,7 +41,7 @@ async def admin_panel(client, message):
     await message.reply_text(text, reply_markup=_admin_markup())
 
 
-@Client.on_callback_query(filters.regex(r"^admin_(stats|users_\\d+|premium|command_.*)$") & filters.user(ADMINS))
+@Client.on_callback_query(filters.regex(r"^admin_(stats|users_\\d+|premium|back|command_.*)$") & filters.user(ADMINS))
 async def admin_panel_callbacks(client, query):
     data = query.data
 
