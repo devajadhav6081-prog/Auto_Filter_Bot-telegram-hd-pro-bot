@@ -1225,11 +1225,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
             InlineKeyboardButton('⇍ ʙᴀᴄᴋ ⇏', callback_data='about')
         ]]
         reply_markup = InlineKeyboardMarkup(buttons)
-        donation_caption = script.DREAMXBOTZ_DONATION.format(
+        # Acknowledge the callback immediately so Telegram does not keep loading.
+        await query.answer()
+        donation_caption = script.GOJOMOVIEXBOT_DONATION.format(
             query.from_user.mention, QR_CODE, OWNER_UPI_ID
         )
-
-        await query.answer()
         try:
             # About is a text message, so send a new photo message instead
             # of trying to convert the existing text message into media.
