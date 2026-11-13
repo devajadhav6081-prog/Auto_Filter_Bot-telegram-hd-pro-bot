@@ -282,8 +282,8 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
 ⏱️ ʀᴜɴᴛɪᴍᴇ : <b>N/A</b>
 🎬 ǫᴜᴀʟɪᴛʏ : <b>{quality}</b>
 🔉 ᴀᴜᴅɪᴏ : <b>{language}</b>
-🌟 ʀᴀᴛɪɴɢ : <b>{rating}/10</b></blockquote>
-{episodes}
+🌟 ʀᴀᴛɪɴɢ : <b>{rating}/10</b>
+{episodes}</blockquote>
 ─┉─•✦•─┉─
 
 🔍 <b>Sᴇᴀʀᴄʜ →</b> {search_link}
