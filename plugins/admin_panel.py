@@ -2,7 +2,7 @@ import logging
 
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from info import ADMINS
+from info import ADMINS, Bot_cmds, MAINTENANCE, PM_SEARCH, AUTO_FFILTER, AUTO_DELETE, IMDB, TMDB_POSTER, STREAM_MODE, PREMIUM_STREAM_MODE, SPELL_CHECK_REPLY, USE_CAPTION_FILTER, PROTECT_CONTENT
 from database.users_chats_db import db
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ PAGE_SIZE = 10
 def _admin_markup():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("👥 Users Management", callback_data="admin_users_0")],
-        [InlineKeyboardButton("📥 Inbox", callback_data="admin_inbox")],
+        [InlineKeyboardButton("📥 Inbox", callback_data="admin_inbox")],\n        [InlineKeyboardButton("📚 Commands", callback_data="admin_commands"),\n         InlineKeyboardButton("⚙️ System Settings", callback_data="admin_system")],
         [
             InlineKeyboardButton("📊 Bot Statistics", callback_data="admin_stats"),
             InlineKeyboardButton("💎 Premium Users", callback_data="admin_premium"),
@@ -42,7 +42,7 @@ async def admin_panel(client, message):
     await message.reply_text(text, reply_markup=_admin_markup())
 
 
-@Client.on_callback_query(filters.regex(r"^admin_(stats|users_[0-9]+|premium|inbox|back|command_.*)$") & filters.user(ADMINS))
+@Client.on_callback_query(filters.regex(r"^admin_(stats|users_[0-9]+|premium|inbox|commands|system|back|command_.*)$") & filters.user(ADMINS))
 async def admin_panel_callbacks(client, query):
     data = query.data
 
@@ -52,6 +52,40 @@ async def admin_panel_callbacks(client, query):
             "<b>📥 INBOX</b>\\n\\n"
             f"Open conversations: <code>{open_count}</code>\\n\\n"
             "New user messages will arrive directly in your admin chat. Use Reply or Close Inbox on each message.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="admin_back")]])
+        )
+
+    if data == "admin_commands":
+        rows = ["<b>📚 BOT COMMANDS</b>\\n"]
+        for command, description in Bot_cmds.items():
+            safe_description = str(description).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            rows.append(f"/{command} — {safe_description}")
+        rows.append("\\n/reply USER_ID MESSAGE — Reply to an inbox user (admin)")
+        return await query.message.edit_text(
+            "\\n".join(rows),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="admin_back")]])
+        )
+
+    if data == "admin_system":
+        def status(value):
+            return "ON ✅" if value else "OFF ❌"
+        settings_text = (
+            "<b>⚙️ SYSTEM SETTINGS</b>\\n\\n"
+            f"Maintenance: <b>{status(MAINTENANCE)}</b>\\n"
+            f"PM Search: <b>{status(PM_SEARCH)}</b>\\n"
+            f"Auto Filter: <b>{status(AUTO_FFILTER)}</b>\\n"
+            f"Auto Delete: <b>{status(AUTO_DELETE)}</b>\\n"
+            f"IMDB: <b>{status(IMDB)}</b>\\n"
+            f"TMDB Poster: <b>{status(TMDB_POSTER)}</b>\\n"
+            f"Stream Mode: <b>{status(STREAM_MODE)}</b>\\n"
+            f"Premium Stream: <b>{status(PREMIUM_STREAM_MODE)}</b>\\n"
+            f"Spell Check: <b>{status(SPELL_CHECK_REPLY)}</b>\\n"
+            f"Caption Filter: <b>{status(USE_CAPTION_FILTER)}</b>\\n"
+            f"Protect Content: <b>{status(PROTECT_CONTENT)}</b>\\n\\n"
+            "<i>Ye current runtime configuration hai; yahan se values change nahi hoti.</i>"
+        )
+        return await query.message.edit_text(
+            settings_text,
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="admin_back")]])
         )
 
