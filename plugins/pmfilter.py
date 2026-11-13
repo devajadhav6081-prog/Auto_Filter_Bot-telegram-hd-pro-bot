@@ -1229,26 +1229,37 @@ async def cb_handler(client: Client, query: CallbackQuery):
             query.from_user.mention, QR_CODE, OWNER_UPI_ID
         )
 
-        # Answer callback first, then edit photo and caption together.
         await query.answer()
         try:
-            await client.edit_message_media(
+            # About is a text message, so send a new photo message instead
+            # of trying to convert the existing text message into media.
+            await client.send_photo(
                 chat_id=query.message.chat.id,
-                message_id=query.message.id,
-                media=InputMediaPhoto(
-                    media='https://graph.org/file/99eebf5dbe8a134f548e0.jpg',
-                    caption=donation_caption,
-                    parse_mode=enums.ParseMode.HTML
-                ),
-                reply_markup=reply_markup
+                photo='https://graph.org/file/99eebf5dbe8a134f548e0.jpg',
+                caption=donation_caption,
+                reply_markup=reply_markup,
+                parse_mode=enums.ParseMode.HTML
             )
-        except Exception as e:
-            logger.exception("Donation menu failed to load")
-            await query.answer(
-                "Donation details load nahi ho paaye. Please try again.",
-                show_alert=True
-            )
-
+            try:
+                await query.message.delete()
+            except Exception:
+                pass
+        except Exception:
+            logger.exception("Donation photo failed; sending text fallback")
+            try:
+                await client.send_message(
+                    chat_id=query.message.chat.id,
+                    text=donation_caption,
+                    reply_markup=reply_markup,
+                    parse_mode=enums.ParseMode.HTML,
+                    disable_web_page_preview=True
+                )
+                try:
+                    await query.message.delete()
+                except Exception:
+                    pass
+            except Exception:
+                logger.exception("Donation text fallback also failed")
     elif query.data == "help":
         buttons = [[
             InlineKeyboardButton('⇋ ʙᴀᴄᴋ ᴛᴏ ʜᴏᴍᴇ ⇋', callback_data='start')
