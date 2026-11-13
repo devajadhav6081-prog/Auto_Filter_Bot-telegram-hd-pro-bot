@@ -201,9 +201,9 @@ LOG_VR_CHANNEL = int(environ.get('LOG_VR_CHANNEL', '-100'))
 VERIFY_IMG = environ.get("VERIFY_IMG", "https://telegra.ph/file/9ecc5d6e4df5b83424896.jpg")
 
 # Tutorial Links
-TUTORIAL = environ.get("TUTORIAL", "https://t.me/dreamxbotz")
-TUTORIAL_2 = environ.get("TUTORIAL_2", "https://t.me/dreamxbotz")
-TUTORIAL_3 = environ.get("TUTORIAL_3", "https://t.me/dreamxbotz")
+TUTORIAL = environ.get("TUTORIAL", "")
+TUTORIAL_2 = environ.get("TUTORIAL_2", "")
+TUTORIAL_3 = environ.get("TUTORIAL_3", "")
 
 # Primary Shortener
 SHORTENER_WEBSITE = environ.get("SHORTENER_WEBSITE", "")
@@ -225,7 +225,7 @@ THREE_VERIFY_GAP = int(environ.get('THREE_VERIFY_GAP', "54000"))   # 15 hours
 # ==============================================================================
 # 8. PREMIUM PLANS & PAYMENT CONFIGURATION
 # ==============================================================================
-QR_CODE = environ.get('QR_CODE', 'https://graph.org/file/e419f801841c2ee3db0fc.jpg')
+QR_CODE = environ.get('QR_CODE', '')
 OWNER_UPI_ID = environ.get('OWNER_UPI_ID', 'ɴᴏ ᴀᴠᴀɪʟᴀʙʟᴇ ʀɪɢʜᴛ ɴᴏᴡ')
 
 # Stars / Premium Pricing Structure {Amount: "Duration"}
