@@ -1220,25 +1220,34 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
     elif query.data == "donation":
         buttons = [[
-                InlineKeyboardButton('🌲 Sᴇɴᴅ Dᴏɴᴀᴛᴇ Sᴄʀᴇᴇɴsʜᴏᴛ Hᴇʀᴇ', url=OWNER_LNK)
-            ],[
-                InlineKeyboardButton('⇍ ʙᴀᴄᴋ ⇏', callback_data='about')
-            ]]
+            InlineKeyboardButton('🌲 Sᴇɴᴅ Dᴏɴᴀᴛᴇ Sᴄʀᴇᴇɴsʜᴏᴛ Hᴇʀᴇ', url=OWNER_LNK)
+        ], [
+            InlineKeyboardButton('⇍ ʙᴀᴄᴋ ⇏', callback_data='about')
+        ]]
         reply_markup = InlineKeyboardMarkup(buttons)
-        await query.message.edit_text(text="● ◌ ◌")
-        await query.message.edit_text(text="● ● ◌")
-        await query.message.edit_text(text="● ● ●")
-        reply_markup = InlineKeyboardMarkup(buttons)
-        await client.edit_message_media(
-            query.message.chat.id,
-            query.message.id,
-            InputMediaPhoto('https://graph.org/file/99eebf5dbe8a134f548e0.jpg')
+        donation_caption = script.DREAMXBOTZ_DONATION.format(
+            query.from_user.mention, QR_CODE, OWNER_UPI_ID
         )
-        await query.message.edit_text(
-            text=script.DREAMXBOTZ_DONATION.format(query.from_user.mention, QR_CODE, OWNER_UPI_ID),
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
-        )
+
+        # Answer callback first, then edit photo and caption together.
+        await query.answer()
+        try:
+            await client.edit_message_media(
+                chat_id=query.message.chat.id,
+                message_id=query.message.id,
+                media=InputMediaPhoto(
+                    media='https://graph.org/file/99eebf5dbe8a134f548e0.jpg',
+                    caption=donation_caption,
+                    parse_mode=enums.ParseMode.HTML
+                ),
+                reply_markup=reply_markup
+            )
+        except Exception as e:
+            logger.exception("Donation menu failed to load")
+            await query.answer(
+                "Donation details load nahi ho paaye. Please try again.",
+                show_alert=True
+            )
 
     elif query.data == "help":
         buttons = [[
