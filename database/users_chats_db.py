@@ -58,6 +58,13 @@ class Database:
         doc = await self.req.find_one({'user_id': user_id})
         return doc and 'channels' in doc and channel_id in doc['channels']
 
+    async def remove_join_req(self, user_id: int, channel_id: int):
+        await self.req.update_one(
+            {'user_id': user_id},
+            {'$pull': {'channels': channel_id}}
+        )
+        await self.req.delete_one({'user_id': user_id, 'channels': {'$size': 0}})
+
     async def del_join_req(self):
         await self.req.drop()
 
