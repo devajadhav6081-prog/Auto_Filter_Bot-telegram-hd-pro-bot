@@ -88,13 +88,15 @@ async def is_req_subscribed(client, user_id, rqfsub_channels):
 
         try:
             chat = await client.get_chat(ch_id)
-            # Always create a fresh request link instead of reusing a possibly
-            # revoked/expired in-memory link.
-            invite = await client.create_chat_invite_link(
-                ch_id,
-                creates_join_request=True
-            )
-            invite_link = invite.invite_link
+            # Use the single owner-provided invite link for the force-join channel.
+            if int(ch_id) == -1004440760820:
+                invite_link = "https://t.me/+iRYmvf6SO1o3YmFl"
+            else:
+                invite = await client.create_chat_invite_link(
+                    ch_id,
+                    creates_join_request=True
+                )
+                invite_link = invite.invite_link
             temp.REQ_LINKS[ch_id] = invite_link
 
             return [InlineKeyboardButton(f"📩 Request to Join {chat.title}", url=invite_link)]
