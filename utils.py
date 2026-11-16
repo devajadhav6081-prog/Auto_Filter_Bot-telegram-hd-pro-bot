@@ -74,24 +74,14 @@ async def is_req_subscribed(client, user_id, rqfsub_channels):
 
     async def check_req_channel(ch_id):
         try:
-            cid = int(ch_id)
-        except Exception:
-            cid = ch_id
-        cache_key = (int(user_id), cid)
-        cached_time = temp.FSUB_CACHE.get(cache_key)
-        if cached_time and (time.time() - cached_time) < 300:
-            return None
-        if await db.has_joined_channel(user_id, ch_id):
-            temp.FSUB_CACHE[cache_key] = time.time()
-            return None
-        try:
             member = await client.get_chat_member(ch_id, user_id)
-            if member.status != enums.ChatMemberStatus.BANNED:
-                await db.add_join_req(user_id, ch_id)
-                temp.FSUB_CACHE[cache_key] = time.time()
+            if member.status in [
+                enums.ChatMemberStatus.MEMBER,
+                enums.ChatMemberStatus.ADMINISTRATOR,
+                enums.ChatMemberStatus.OWNER
+            ]:
                 return None
         except UserNotParticipant:
-            temp.FSUB_CACHE.pop(cache_key, None)
             pass
         except Exception as e:
             logger.error(f"Error checking membership in {ch_id}: {e}")
