@@ -73,77 +73,90 @@ async def is_req_subscribed(client, user_id, rqfsub_channels):
     btn = []
 
     async def check_req_channel(ch_id):
-        cid = int(ch_id)
-        # A pending request remains valid until the user leaves; leave updates
-        # remove it from the database. Do not use a time-based membership cache.
-        if await db.has_joined_channel(user_id, cid):
+        try:
+            cid = int(ch_id)
+        except Exception:
+            cid = ch_id
+        cache_key = (int(user_id), cid)
+        cached_time = temp.FSUB_CACHE.get(cache_key)
+        if cached_time and (time.time() - cached_time) < 300:
+            return None
+        if await db.has_joined_channel(user_id, ch_id):
+            temp.FSUB_CACHE[cache_key] = time.time()
             return None
         try:
-            member = await client.get_chat_member(cid, int(user_id))
-            if member.status in (
-                enums.ChatMemberStatus.MEMBER,
-                enums.ChatMemberStatus.ADMINISTRATOR,
-                enums.ChatMemberStatus.OWNER,
-                enums.ChatMemberStatus.RESTRICTED,
-            ):
+            member = await client.get_chat_member(ch_id, user_id)
+            if member.status != enums.ChatMemberStatus.BANNED:
+                await db.add_join_req(user_id, ch_id)
+                temp.FSUB_CACHE[cache_key] = time.time()
                 return None
         except UserNotParticipant:
+            temp.FSUB_CACHE.pop(cache_key, None)
             pass
         except Exception as e:
-            logger.error(f"Error checking request-channel membership in {cid}: {e}")
+            logger.error(f"Error checking membership in {ch_id}: {e}")
+
         try:
-            chat = await client.get_chat(cid)
-            invite_link = temp.REQ_LINKS.get(cid)
-            if not invite_link:
-                invite = await client.create_chat_invite_link(cid, creates_join_request=True)
+            chat = await client.get_chat(ch_id)
+            if ch_id in temp.REQ_LINKS:
+                invite_link = temp.REQ_LINKS[ch_id]
+            else:
+                invite = await client.create_chat_invite_link(ch_id)
                 invite_link = invite.invite_link
-                temp.REQ_LINKS[cid] = invite_link
+                temp.REQ_LINKS[ch_id] = invite_link
+
             return [InlineKeyboardButton(f"⛔️ Join {chat.title}", url=invite_link)]
         except ChatAdminRequired:
-            logger.warning(f"Bot not admin in request channel {cid}")
+            logger.warning(f"Bot not admin in {ch_id}")
         except Exception as e:
-            logger.warning(f"Request invite link error for {cid}: {e}")
+            logger.warning(f"Invite link error for {ch_id}: {e}")
         return None
 
-    results = await asyncio.gather(*(check_req_channel(ch_id) for ch_id in rqfsub_channels))
+    tasks = [check_req_channel(ch_id) for ch_id in rqfsub_channels]
+    results = await asyncio.gather(*tasks)
+
     for res in results:
         if res:
             btn.append(res)
-    return btn
 
+    return btn
 
 async def is_subscribed(client, user_id, fsub_channels):
     btn = []
-
+    
     async def check_channel(channel_id):
-        cid = int(channel_id)
         try:
-            member = await client.get_chat_member(cid, int(user_id))
-            if member.status in (
-                enums.ChatMemberStatus.MEMBER,
-                enums.ChatMemberStatus.ADMINISTRATOR,
-                enums.ChatMemberStatus.OWNER,
-                enums.ChatMemberStatus.RESTRICTED,
-            ):
-                return None
+            cid = int(channel_id)
+        except Exception:
+            cid = channel_id
+        cache_key = (int(user_id), cid)
+        cached_time = temp.FSUB_CACHE.get(cache_key)
+        if cached_time and (time.time() - cached_time) < 300:
+            return None
+        try:
+            # No need to get chat object separately
+            await client.get_chat_member(channel_id, user_id)
+            temp.FSUB_CACHE[cache_key] = time.time()
         except UserNotParticipant:
-            pass
+            temp.FSUB_CACHE.pop(cache_key, None)
+            try:
+                chat = await client.get_chat(int(channel_id))
+                invite_link = await client.create_chat_invite_link(channel_id)
+                return InlineKeyboardButton(f"📢 Join {chat.title}", url=invite_link.invite_link)
+            except Exception as e:
+                logger.warning(f"Failed to create invite for {channel_id}: {e}")
         except Exception as e:
-            logger.exception(f"is_subscribed error for {cid}: {e}")
-        try:
-            chat = await client.get_chat(cid)
-            invite_link = await client.create_chat_invite_link(cid)
-            return InlineKeyboardButton(f"📢 Join {chat.title}", url=invite_link.invite_link)
-        except Exception as e:
-            logger.warning(f"Failed to create invite for {cid}: {e}")
+            logger.exception(f"is_subscribed error for {channel_id}: {e}")
         return None
 
-    results = await asyncio.gather(*(check_channel(ch_id) for ch_id in fsub_channels))
+    tasks = [check_channel(channel_id) for channel_id in fsub_channels]
+    results = await asyncio.gather(*tasks)
+
     for button in results:
         if button:
             btn.append([button])
+            
     return btn
-
 
 async def is_check_admin(client, chat_id, user_id):
     try:
