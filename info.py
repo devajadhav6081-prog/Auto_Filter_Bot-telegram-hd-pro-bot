@@ -65,7 +65,7 @@ REQST_CHANNEL = int(reqst_channel) if reqst_channel and id_pattern.search(reqst_
 INDEX_REQ_CHANNEL = int(environ.get('INDEX_REQ_CHANNEL', -1003775721605))
 
 # Force Subscription Channels (Users must join these before using the bot)
-auth_req_channels = environ.get("AUTH_REQ_CHANNELS", "-100")
+auth_req_channels = environ.get("AUTH_REQ_CHANNELS", "-1004440760820")
 auth_channels = environ.get("AUTH_CHANNELS", "-100")
 AUTH_REQ_CHANNELS = [int(ch) for ch in auth_req_channels.split() if ch and id_pattern.match(ch)]
 AUTH_CHANNELS = [int(ch) for ch in auth_channels.split() if ch and id_pattern.match(ch)]
