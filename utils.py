@@ -73,10 +73,13 @@ async def is_req_subscribed(client, user_id, rqfsub_channels):
     btn = []
 
     async def check_req_channel(ch_id):
-        cache_key = (int(user_id), int(ch_id))
-        cached_time = temp.FSUB_CACHE.get(cache_key)
-        if cached_time and (time.time() - cached_time) < 300:
-            return None
+        # A pending Telegram join request is enough to continue file delivery.
+        try:
+            if await db.has_joined_channel(int(user_id), int(ch_id)):
+                return None
+        except Exception as e:
+            logger.warning(f"Join request status check failed for {ch_id}: {e}")
+
         try:
             member = await client.get_chat_member(ch_id, user_id)
             if member.status in [
