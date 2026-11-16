@@ -279,7 +279,8 @@ async def start(client, message):
                 btn = []
                 chat = grp_id
                 settings      = await get_settings(chat)
-                req_channel_ids = {int(ch) for ch in AUTH_REQ_CHANNELS}\n            fsub_channels = [ch for ch in dict.fromkeys((settings.get('fsub', []) if settings else []) + AUTH_CHANNELS) if int(ch) not in req_channel_ids] 
+                req_channel_ids = {int(ch) for ch in AUTH_REQ_CHANNELS}
+                fsub_channels = [ch for ch in dict.fromkeys((settings.get('fsub', []) if settings else []) + AUTH_CHANNELS) if int(ch) not in req_channel_ids] 
 
                 if fsub_channels and AUTH_REQ_CHANNELS:
                     res1, res2 = await asyncio.gather(
