@@ -95,7 +95,7 @@ async def is_req_subscribed(client, user_id, rqfsub_channels):
             invite_link = invite.invite_link
             temp.REQ_LINKS[ch_id] = invite_link
 
-            return [InlineKeyboardButton(f"📩 Request to Join {chat.title}", url= 'https://t.me/+y9h1tvj0jpg5Y2Q1' )]
+            return [InlineKeyboardButton(f"📩 Request to Join {chat.title}", url=invite_link)]
         except ChatAdminRequired:
             logger.warning(f"Bot not admin in {ch_id}")
         except Exception as e:
