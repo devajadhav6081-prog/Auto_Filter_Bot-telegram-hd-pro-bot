@@ -90,7 +90,7 @@ async def is_req_subscribed(client, user_id, rqfsub_channels):
             chat = await client.get_chat(ch_id)
             # Use the single owner-provided invite link for the force-join channel.
             if int(ch_id) == -1004440760820:
-                invite_link = "https://t.me/+iRYmvf6SO1o3YmFl"
+                invite_link = "https://t.me/+ACNvSg9iDNYyZTNl"
             else:
                 invite = await client.create_chat_invite_link(
                     ch_id,
