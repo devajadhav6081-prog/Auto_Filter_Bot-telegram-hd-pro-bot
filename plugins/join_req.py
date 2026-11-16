@@ -22,11 +22,23 @@ async def del_requests(client, message):
 from pyrogram import enums
 
 @Client.on_chat_member_updated()
-async def clear_left_member_request(client, update):
-    if update.chat.id not in AUTH_REQ_CHANNELS:
+async def clear_member_request(client, update):
+    # Remove the pending-request record as soon as the request is approved
+    # or the user leaves/is removed. This prevents an old request from
+    # hiding the Request to Join button after the user leaves later.
+    if int(update.chat.id) not in AUTH_REQ_CHANNELS:
         return
 
-    new_status = update.new_chat_member.status
-    if new_status in (enums.ChatMemberStatus.LEFT, enums.ChatMemberStatus.BANNED):
-        user_id = update.new_chat_member.user.id
-        await db.remove_join_req(user_id, update.chat.id)
+    member = update.new_chat_member
+    if not member:
+        return
+
+    status = member.status
+    if status in (
+        enums.ChatMemberStatus.MEMBER,
+        enums.ChatMemberStatus.ADMINISTRATOR,
+        enums.ChatMemberStatus.OWNER,
+        enums.ChatMemberStatus.LEFT,
+        enums.ChatMemberStatus.BANNED,
+    ):
+        await db.remove_join_req(member.user.id, int(update.chat.id))
