@@ -279,7 +279,7 @@ async def start(client, message):
                 btn = []
                 chat = grp_id
                 settings      = await get_settings(chat)
-                fsub_channels = list(dict.fromkeys((settings.get('fsub', []) if settings else [])+ AUTH_CHANNELS)) 
+                fsub_channels = [ch for ch in dict.fromkeys((settings.get('fsub', []) if settings else []) + AUTH_CHANNELS) if ch not in AUTH_REQ_CHANNELS] 
 
                 if fsub_channels and AUTH_REQ_CHANNELS:
                     res1, res2 = await asyncio.gather(
@@ -306,7 +306,7 @@ async def start(client, message):
                         reply_markup=reply_markup,
                         parse_mode=enums.ParseMode.HTML
                     )
-                    return
+                    # Continue to the file delivery flow even if the join request is pending.
 
             except Exception as e:
                 logger.error(f"❗️ Force Sub Error:\n\n{repr(e)}")
