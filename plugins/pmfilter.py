@@ -896,7 +896,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             btn = []
             chat = file_id.split("_")[0]
             settings = await get_settings(chat)
-            fsub_channels = list(dict.fromkeys((settings.get('fsub', []) if settings else [])+ AUTH_CHANNELS)) 
+            fsub_channels = [ch for ch in dict.fromkeys((settings.get('fsub', []) if settings else []) + AUTH_CHANNELS) if ch not in AUTH_REQ_CHANNELS] 
             if fsub_channels and AUTH_REQ_CHANNELS:
                 res1, res2 = await asyncio.gather(
                     is_subscribed(client, query.from_user.id, fsub_channels),
@@ -913,13 +913,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     await query.edit_message_reply_markup(reply_markup=InlineKeyboardMarkup(btn))
                 except (MessageNotModified, MessageIdInvalid):
                     pass
-                await query.answer(
-                    f"👋 Hello {query.from_user.first_name},\n\n"
-                    "🛑 Yᴏᴜ ʜᴀᴠᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴀʟʟ ʀᴇǫᴜɪʀᴇᴅ ᴜᴘᴅᴀᴛᴇ Cʜᴀɴɴᴇʟs.\n"
-                    "👉 Pʟᴇᴀsᴇ ᴊᴏɪɴ ᴇᴀᴄʜ ᴏɴᴇ ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ.\n",
-                    show_alert=True
-                )
-                return
+            # Pending join requests must not block file delivery.
             await query.answer(url=f"https://t.me/{temp.U_NAME}?start={kk}_{file_id}")
             if query.message.chat.type == enums.ChatType.PRIVATE:
                 try:
