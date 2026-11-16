@@ -892,28 +892,26 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
     elif query.data.startswith("checksub"):
         try:
-            ident, kk, file_id = query.data.split("#")
-            btn = []
-            chat = file_id.split("_")[0]
+            ident, kk, file_id = query.data.split("#", 2)
+            chat = file_id.split("_", 1)[0]
             settings = await get_settings(chat)
-            fsub_channels = [ch for ch in dict.fromkeys((settings.get('fsub', []) if settings else []) + AUTH_CHANNELS) if ch not in AUTH_REQ_CHANNELS] 
-            if fsub_channels and AUTH_REQ_CHANNELS:
-                res1, res2 = await asyncio.gather(
-                    is_subscribed(client, query.from_user.id, fsub_channels),
-                    is_req_subscribed(client, query.from_user.id, AUTH_REQ_CHANNELS)
+            req_channel_ids = {int(ch) for ch in AUTH_REQ_CHANNELS}
+            fsub_channels = [
+                ch for ch in dict.fromkeys(
+                    (settings.get('fsub', []) if settings else []) + AUTH_CHANNELS
                 )
-                btn += res1 + res2
-            elif fsub_channels:
+                if int(ch) not in req_channel_ids
+            ]
+            btn = []
+            if fsub_channels:
                 btn += await is_subscribed(client, query.from_user.id, fsub_channels)
-            elif AUTH_REQ_CHANNELS:
-                btn += await is_req_subscribed(client, query.from_user.id, AUTH_REQ_CHANNELS)
             if btn:
                 btn.append([InlineKeyboardButton("♻️ ᴛʀʏ ᴀɢᴀɪɴ ♻️", callback_data=f"checksub#{kk}#{file_id}")])
-                try:
-                    await query.edit_message_reply_markup(reply_markup=InlineKeyboardMarkup(btn))
-                except (MessageNotModified, MessageIdInvalid):
-                    pass
-            # Pending join requests must not block file delivery.
+                await query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup(btn))
+                await query.answer("Please join the required channel first.", show_alert=True)
+                return
+
+            # Request-to-join approval is not required for file delivery.
             await query.answer(url=f"https://t.me/{temp.U_NAME}?start={kk}_{file_id}")
             if query.message.chat.type == enums.ChatType.PRIVATE:
                 try:
