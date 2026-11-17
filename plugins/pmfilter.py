@@ -905,16 +905,15 @@ async def cb_handler(client: Client, query: CallbackQuery):
             btn = []
             if fsub_channels:
                 btn += await is_subscribed(client, query.from_user.id, fsub_channels)
-            # A member or a user with a pending join request is allowed through.
             if AUTH_REQ_CHANNELS:
                 btn += await is_req_subscribed(client, query.from_user.id, AUTH_REQ_CHANNELS)
             if btn:
                 btn.append([InlineKeyboardButton("♻️ ᴛʀʏ ᴀɢᴀɪɴ ♻️", callback_data=f"checksub#{kk}#{file_id}")])
                 await query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup(btn))
-                await query.answer("Please join the required channel first.", show_alert=True)
+                await query.answer("Channel join karein ya join request bhejein.", show_alert=True)
                 return
 
-            # Request-to-join approval is not required for file delivery.
+            # Re-open the bot deep link; /start performs another fresh membership check.
             await query.answer(url=f"https://t.me/{temp.U_NAME}?start={kk}_{file_id}")
             if query.message.chat.type == enums.ChatType.PRIVATE:
                 try:
@@ -922,7 +921,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 except MessageDeleteForbidden:
                     pass
         except Exception as e:
-            logger.error(f"❌ Error in checksub callback:\n\n{repr(e)}")
+            logger.exception("Force-join callback check failed; keeping file locked: %s", e)
+            await query.answer("Membership check abhi nahi ho paaya. Dobara try karein.", show_alert=True)
 
 
     elif query.data.startswith("killfilesdq"):
