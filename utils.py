@@ -67,6 +67,7 @@ class temp(object):
     TEMP_INVITE_LINKS = LimitedDict(maxsize=200)
     REQ_LINKS = LimitedDict(maxsize=200)
     FSUB_CACHE = LimitedDict(maxsize=2000)
+    APP_SEARCHES = LimitedDict(maxsize=500)
 
 
 async def is_req_subscribed(client, user_id, rqfsub_channels):
