@@ -103,6 +103,15 @@ async def start(client, message):
         if not await db.is_user_exist(message.from_user.id):
             await db.add_user(message.from_user.id, message.from_user.first_name)
             await client.send_message(LOG_CHANNEL, script.LOG_TEXT_P.format(message.from_user.id, message.from_user.mention))
+        if len(message.command) == 2 and message.command[1].startswith('app_'):
+            token = message.command[1][4:]
+            app_request = temp.APP_SEARCHES.get(token)
+            if not app_request or app_request.get('user_id') != message.from_user.id:
+                return await message.reply_text('This app search link has expired. Please search again in Films Chor App.')
+            temp.APP_SEARCHES.pop(token, None)
+            message.text = app_request['query']
+            await auto_filter(client, message)
+            raise StopPropagation
         if len(message.command) != 2:
             buttons = [[
                         InlineKeyboardButton('🔰 𝘼𝘿𝘿 𝙈𝙀 𝙏𝙊 𝙔𝙊𝙐𝙍 𝙂𝙍𝙊𝙐𝙋 🔰', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
