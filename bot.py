@@ -6,12 +6,13 @@ from pyrogram.raw.all import layer
 import time
 from pyrogram.errors import FloodWait
 import asyncio
+import aiohttp
 from datetime import date, datetime
 from pathlib import Path
 from aiohttp import web
 from database.ia_filterdb import Media, Media2
 from database.users_chats_db import db
-from info import MULTIPLE_DB, ON_HEROKU, LOG_STR, LOG_CHANNEL, PORT, TIMEZONE, TZ
+from info import MULTIPLE_DB, ON_HEROKU, LOG_STR, LOG_CHANNEL, PORT, TIMEZONE, TZ, BOT_TOKEN, URL
 from utils import temp
 from Script import script
 from plugins import web_server, check_expired_premium, keep_alive
@@ -58,6 +59,21 @@ async def dreamxbotz_start():
     await dreamxbotz.start()
     bot_info = await dreamxbotz.get_me()
     dreamxbotz.username = bot_info.username
+    try:
+        menu_url = URL.rstrip('/') + '/app'
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f'https://api.telegram.org/bot{BOT_TOKEN}/setChatMenuButton',
+                json={'menu_button': {'type': 'web_app', 'text': 'Open App', 'web_app': {'url': menu_url}}},
+                timeout=aiohttp.ClientTimeout(total=15)
+            ) as response:
+                result = await response.json()
+                if not result.get('ok'):
+                    logger.warning('Could not set Telegram Mini App menu button: %s', result)
+                else:
+                    logger.info('Films Chor Mini App menu button configured: %s', menu_url)
+    except Exception as e:
+        logger.warning('Mini App menu setup failed: %s', e)
     await initialize_clients()
     plugins_names = get_plugins_names()
     if plugins_names:
