@@ -252,9 +252,9 @@ PORT = int(environ.get("PORT", "8080"))
 BIND_ADDRESS = getenv('WEB_SERVER_BIND_ADDRESS', '0.0.0.0')
 
 FQDN = (
-    environ.get('FQDN')
-    or environ.get('RENDER_EXTERNAL_HOSTNAME')
-    or (f"{APP_NAME}.herokuapp.com" if ON_HEROKU else BIND_ADDRESS)
+    environ.get('FQDN', BIND_ADDRESS)
+    if not ON_HEROKU or environ.get('FQDN')
+    else f"{APP_NAME}.herokuapp.com"
 )
 FQDN = re.sub(r'^https?://', '', str(FQDN)).rstrip('/')
 NO_PORT = is_enabled(environ.get('NO_PORT'), False)
