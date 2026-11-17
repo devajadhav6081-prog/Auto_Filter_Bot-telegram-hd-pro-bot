@@ -10,6 +10,7 @@ from dreamxbotz.server.exceptions import FIleNotFound, InvalidHash
 from dreamxbotz.util.custom_dl import ByteStreamer
 from dreamxbotz.util.render_template import render_page
 import info
+from utils import temp
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,35 @@ async def favicon_route_handler(request):
 @routes.get("/", allow_head=True)
 async def root_route_handler(request):
     return web.json_response("dreamxbotz")
+
+@routes.get('/app', allow_head=True)
+async def mini_app_handler(request: web.Request):
+    try:
+        with open('dreamxbotz/template/app.html', encoding='utf-8') as app_file:
+            page = app_file.read().replace('__BOT_USERNAME__', temp.U_NAME or '')
+        return web.Response(text=page, content_type='text/html')
+    except Exception as e:
+        logger.exception('Mini App page error: %s', e)
+        raise web.HTTPInternalServerError(text='Mini App is unavailable')
+
+
+@routes.post('/api/app/search')
+async def app_search_handler(request: web.Request):
+    try:
+        data = await request.json()
+        query = str(data.get('query', '')).strip()
+        user_id = int(data.get('user_id') or 0)
+        if not query or len(query) > 100 or not user_id:
+            raise web.HTTPBadRequest(text='A valid search query is required')
+        token = secrets.token_urlsafe(9).replace('-', '').replace('_', '')
+        temp.APP_SEARCHES[token] = {'query': query, 'user_id': user_id}
+        return web.json_response({'token': token})
+    except web.HTTPException:
+        raise
+    except Exception as e:
+        logger.warning('Mini App search token error: %s', e)
+        raise web.HTTPBadRequest(text='Invalid request')
+
 
 @routes.get(r"/watch/{path:\S+}", allow_head=True)
 async def watch_handler(request: web.Request):
