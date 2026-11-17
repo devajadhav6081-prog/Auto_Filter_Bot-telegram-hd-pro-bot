@@ -6,6 +6,7 @@ import random
 import asyncio
 import string
 import sys
+import time
 from .pmfilter import auto_filter 
 from Script import script
 from datetime import datetime, timedelta
@@ -107,7 +108,7 @@ async def start(client, message):
             token = message.command[1][4:]
             app_request = temp.APP_SEARCHES.get(token)
             if (not app_request or app_request.get('user_id') != message.from_user.id
-                    or datetime.now().timestamp() - app_request.get('created_at', 0) > 600):
+                    or time.time() - app_request.get('created_at', 0) > 600):
                 return await message.reply_text('This app search link has expired. Please search again in Films Chor App.')
             temp.APP_SEARCHES.pop(token, None)
             message.text = app_request['query']
