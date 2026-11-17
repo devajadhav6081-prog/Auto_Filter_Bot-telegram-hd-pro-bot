@@ -11,7 +11,7 @@ from Script import script
 from datetime import datetime, timedelta
 from database.refer import referdb
 from database.config_db import mdb
-from pyrogram.types import LinkPreviewOptions, InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, CopyTextButton, WebAppInfo
+from pyrogram.types import LinkPreviewOptions, InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, CopyTextButton
 from pyrogram import Client, filters, enums, StopPropagation
 from pyrogram.errors import FloodWait, MediaEmpty, UserNotParticipant, ChannelInvalid, PeerIdInvalid, UserIsBlocked, InputUserDeactivated
 from database.ia_filterdb import Media, Media2, get_file_details, unpack_new_file_id, get_bad_files, save_file
@@ -113,7 +113,6 @@ async def start(client, message):
                         InlineKeyboardButton('𝗧𝗢𝗣 𝗦𝗘𝗔𝗥𝗖𝗛𝗜𝗡𝗚 ⭐', callback_data="topsearch"),
                         InlineKeyboardButton('𝗨𝗣𝗚𝗥𝗔𝗗𝗘 🎟', callback_data="premium_info"),
                     ]]
-            buttons.insert(0, [InlineKeyboardButton("✨ OPEN CUSTOM MENU", web_app=WebAppInfo(url="https://auto-filter-bot-telegram-hd-pro-bot.onrender.com/app"))])
             reply_markup = InlineKeyboardMarkup(buttons)
             current_time = datetime.now(TZ)
             curr_time = current_time.hour        
@@ -157,7 +156,6 @@ async def start(client, message):
                         InlineKeyboardButton('ᴛᴏᴘ sᴇᴀʀᴄʜɪɴɢ ⭐', callback_data="topsearch"),
                         InlineKeyboardButton('ᴜᴘɢʀᴀᴅᴇ 🎟', callback_data="premium_info"),
                     ]]
-            buttons.insert(0, [InlineKeyboardButton("✨ OPEN CUSTOM MENU", web_app=WebAppInfo(url="https://auto-filter-bot-telegram-hd-pro-bot.onrender.com/app"))])
             reply_markup = InlineKeyboardMarkup(buttons)
             current_time = datetime.now(TZ)
             curr_time = current_time.hour        
