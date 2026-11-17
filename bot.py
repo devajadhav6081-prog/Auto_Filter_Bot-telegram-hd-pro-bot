@@ -60,7 +60,7 @@ async def dreamxbotz_start():
     bot_info = await dreamxbotz.get_me()
     dreamxbotz.username = bot_info.username
     try:
-        menu_url = URL.rstrip('/') + '/app'
+        menu_url = 'https://auto-filter-bot-telegram-hd-pro-bot.onrender.com/app'
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 f'https://api.telegram.org/bot{BOT_TOKEN}/setChatMenuButton',
