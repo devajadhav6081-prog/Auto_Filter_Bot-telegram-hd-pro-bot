@@ -50,7 +50,7 @@ async def app_movies_handler(request: web.Request):
         movies = []
         seen = set()
         series_pattern = re.compile(
-            r"(?:\\bS\\d{1,2}\\b|\\bSeason\\s*\\d+|\\bEpisode\\s*\\d+|\\bE\\d{1,2}\\b)",
+            r"(?:\bS\d{1,2}\b|\bSeason\s*\d+|\bEpisode\s*\d+|\bE\d{1,2}\b)",
             re.IGNORECASE,
         )
         for file in files:
@@ -58,17 +58,52 @@ async def app_movies_handler(request: web.Request):
             if not file_name or series_pattern.search(file_name):
                 continue
             title = await dreamxbotz_clean_title(file_name)
-            title = re.sub(r"\\s+", " ", title).strip()
+            title = re.sub(r"\s+", " ", title).strip()
             key = title.casefold()
             if title and key not in seen:
                 seen.add(key)
-                movies.append({"title": title})
+                movies.append({
+                    "title": title,
+                    "file_id": str(getattr(file, "file_id", "") or ""),
+                    "has_poster": bool(getattr(file, "cover", None)),
+                })
             if len(movies) >= 60:
                 break
         return web.json_response({"movies": movies})
     except Exception as e:
         logger.exception("Mini App movie catalog error: %s", e)
         raise web.HTTPInternalServerError(text="Movie catalog is temporarily unavailable")
+
+
+@routes.get('/api/app/poster')
+async def app_poster_handler(request: web.Request):
+    """Serve cover images belonging to files indexed in the movie database."""
+    file_id = request.query.get('file_id', '').strip()
+    if not file_id:
+        raise web.HTTPBadRequest(text='Missing file id')
+    files = await dreamxbotz_fetch_media(150)
+    record = next(
+        (item for item in files if str(getattr(item, 'file_id', '') or '') == file_id),
+        None,
+    )
+    cover_id = getattr(record, 'cover', None) if record else None
+    if not cover_id:
+        raise web.HTTPNotFound(text='Poster not available')
+    try:
+        poster = await multi_clients[0].download_media(cover_id, in_memory=True)
+        if poster is None:
+            raise web.HTTPNotFound(text='Poster not available')
+        image_data = poster.getvalue() if hasattr(poster, 'getvalue') else bytes(poster)
+        return web.Response(
+            body=image_data,
+            content_type='image/jpeg',
+            headers={'Cache-Control': 'public, max-age=3600'},
+        )
+    except web.HTTPException:
+        raise
+    except Exception as e:
+        logger.warning('Mini App poster download failed: %s', e)
+        raise web.HTTPNotFound(text='Poster not available')
 
 
 @routes.post('/api/app/search')
@@ -86,7 +121,7 @@ async def app_search_handler(request: web.Request):
         if not received_hash or not auth_date or time.time() - auth_date > 86400 or auth_date - time.time() > 60:
             raise web.HTTPUnauthorized(text='Telegram session expired. Reopen the Mini App.')
 
-        check_string = '\\n'.join(f'{key}={value}' for key, value in sorted(fields.items()))
+        check_string = '\n'.join(f'{key}={value}' for key, value in sorted(fields.items()))
         secret_key = hmac.new(b'WebAppData', info.BOT_TOKEN.encode(), hashlib.sha256).digest()
         calculated_hash = hmac.new(secret_key, check_string.encode(), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(calculated_hash, received_hash):
