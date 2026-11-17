@@ -315,7 +315,8 @@ async def start(client, message):
                         reply_markup=reply_markup,
                         parse_mode=enums.ParseMode.HTML
                     )
-                    # Continue to the file delivery flow even if the join request is pending.
+                    # No membership and no pending request: do not send the requested file.
+                    return
 
             except Exception as e:
                 logger.error(f"❗️ Force Sub Error:\n\n{repr(e)}")
