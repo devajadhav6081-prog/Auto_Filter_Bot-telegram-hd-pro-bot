@@ -6,13 +6,12 @@ from pyrogram.raw.all import layer
 import time
 from pyrogram.errors import FloodWait
 import asyncio
-import aiohttp
 from datetime import date, datetime
 from pathlib import Path
 from aiohttp import web
 from database.ia_filterdb import Media, Media2
 from database.users_chats_db import db
-from info import MULTIPLE_DB, ON_HEROKU, LOG_STR, LOG_CHANNEL, PORT, TIMEZONE, TZ, BOT_TOKEN, URL
+from info import MULTIPLE_DB, ON_HEROKU, LOG_STR, LOG_CHANNEL, PORT, TIMEZONE, TZ
 from utils import temp
 from Script import script
 from plugins import web_server, check_expired_premium, keep_alive
@@ -56,30 +55,9 @@ def get_plugins_names(plugins_dir="plugins"):
 async def dreamxbotz_start():
     logger.info('\n\nInitializing DreamxBotz')
     dreamxbotz.loop = asyncio.get_running_loop()
-    # Bind Render's public web port before Telegram/DB initialization.
-    app = web.AppRunner(await web_server())
-    await app.setup()
-    bind_address = '0.0.0.0'
-    await web.TCPSite(app, bind_address, PORT).start()
-    logger.info('Web server listening on %s:%s', bind_address, PORT)
     await dreamxbotz.start()
     bot_info = await dreamxbotz.get_me()
     dreamxbotz.username = bot_info.username
-    try:
-        menu_url = 'https://auto-filter-bot-telegram-hd-pro-bot.onrender.com/app'
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f'https://api.telegram.org/bot{BOT_TOKEN}/setChatMenuButton',
-                json={'menu_button': {'type': 'web_app', 'text': 'Open App', 'web_app': {'url': menu_url}}},
-                timeout=aiohttp.ClientTimeout(total=15)
-            ) as response:
-                result = await response.json()
-                if not result.get('ok'):
-                    logger.warning('Could not set Telegram Mini App menu button: %s', result)
-                else:
-                    logger.info('Films Chor Mini App menu button configured: %s', menu_url)
-    except Exception as e:
-        logger.warning('Mini App menu setup failed: %s', e)
     await initialize_clients()
     plugins_names = get_plugins_names()
     if plugins_names:
@@ -114,6 +92,10 @@ async def dreamxbotz_start():
     now = datetime.now(TZ)
     current_time = now.strftime("%I:%M:%S %p")
     await dreamxbotz.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(temp.B_LINK, today, current_time, TIMEZONE))
+    app = web.AppRunner(await web_server())
+    await app.setup()
+    bind_address = "0.0.0.0"
+    await web.TCPSite(app, bind_address, PORT).start()
     asyncio.create_task(keep_alive())
 
     try:
