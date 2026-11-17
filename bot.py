@@ -63,14 +63,14 @@ async def dreamxbotz_start():
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 f'https://api.telegram.org/bot{BOT_TOKEN}/setChatMenuButton',
-                json={'menu_button': {'type': 'commands'}},
+                json={'menu_button': {'type': 'default'}},
                 timeout=aiohttp.ClientTimeout(total=15)
             ) as response:
                 result = await response.json()
                 if not result.get('ok'):
                     logger.warning('Could not restore default Telegram menu button: %s', result)
                 else:
-                    logger.info('Default Telegram menu button restored.')
+                    logger.info('Telegram menu button reset to Telegram default (commands).')
     except Exception as e:
         logger.warning('Default menu button reset failed: %s', e)
     await initialize_clients()
