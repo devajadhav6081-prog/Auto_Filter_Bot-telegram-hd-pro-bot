@@ -113,10 +113,6 @@ async def start(client, message):
                         InlineKeyboardButton('ᴛᴏᴘ sᴇᴀʀᴄʜɪɴɢ ⭐', callback_data="topsearch"),
                         InlineKeyboardButton('ᴜᴘɢʀᴀᴅᴇ 🎟', callback_data="premium_info"),
                     ]]
-            # Show Request to Join on /start only when the user is not a
-            # channel member and has no pending join request.
-            if AUTH_REQ_CHANNELS:
-                buttons.extend(await is_req_subscribed(client, message.from_user.id, AUTH_REQ_CHANNELS))
             reply_markup = InlineKeyboardMarkup(buttons)
             current_time = datetime.now(TZ)
             curr_time = current_time.hour        
@@ -160,10 +156,6 @@ async def start(client, message):
                         InlineKeyboardButton('ᴛᴏᴘ sᴇᴀʀᴄʜɪɴɢ ⭐', callback_data="topsearch"),
                         InlineKeyboardButton('ᴜᴘɢʀᴀᴅᴇ 🎟', callback_data="premium_info"),
                     ]]
-            # Show Request to Join on /start only when the user is not a
-            # channel member and has no pending join request.
-            if AUTH_REQ_CHANNELS:
-                buttons.extend(await is_req_subscribed(client, message.from_user.id, AUTH_REQ_CHANNELS))
             reply_markup = InlineKeyboardMarkup(buttons)
             current_time = datetime.now(TZ)
             curr_time = current_time.hour        
