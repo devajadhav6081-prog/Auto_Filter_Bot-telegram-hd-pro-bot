@@ -3,6 +3,11 @@ import re
 import math
 import logging
 import secrets
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import parse_qsl
 import mimetypes
 from aiohttp.http_exceptions import BadStatusLine
 from dreamxbotz.Bot import multi_clients, work_loads
@@ -41,11 +46,29 @@ async def app_search_handler(request: web.Request):
     try:
         data = await request.json()
         query = str(data.get('query', '')).strip()
-        user_id = int(data.get('user_id') or 0)
-        if not query or len(query) > 100 or not user_id:
+        init_data = str(data.get('init_data', ''))
+        if not query or len(query) > 100 or not init_data:
             raise web.HTTPBadRequest(text='A valid search query is required')
+
+        fields = dict(parse_qsl(init_data, keep_blank_values=True))
+        received_hash = fields.pop('hash', '')
+        auth_date = int(fields.get('auth_date', '0'))
+        if not received_hash or not auth_date or time.time() - auth_date > 86400 or auth_date - time.time() > 60:
+            raise web.HTTPUnauthorized(text='Telegram session expired. Reopen the Mini App.')
+
+        check_string = '\\n'.join(f'{key}={value}' for key, value in sorted(fields.items()))
+        secret_key = hmac.new(b'WebAppData', info.BOT_TOKEN.encode(), hashlib.sha256).digest()
+        calculated_hash = hmac.new(secret_key, check_string.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(calculated_hash, received_hash):
+            raise web.HTTPUnauthorized(text='Telegram user verification failed')
+
+        user_data = json.loads(fields.get('user', '{}'))
+        user_id = int(user_data.get('id') or 0)
+        if not user_id:
+            raise web.HTTPUnauthorized(text='Telegram user information is missing')
+
         token = secrets.token_urlsafe(9).replace('-', '').replace('_', '')
-        temp.APP_SEARCHES[token] = {'query': query, 'user_id': user_id}
+        temp.APP_SEARCHES[token] = {'query': query, 'user_id': user_id, 'created_at': time.time()}
         return web.json_response({'token': token})
     except web.HTTPException:
         raise
