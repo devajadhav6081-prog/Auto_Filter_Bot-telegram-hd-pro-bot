@@ -52,21 +52,22 @@ async def give_filter(client, message):
             pass
     asyncio.create_task(mdb.update_top_messages(message.from_user.id, message.text))
     if message.chat.id != SUPPORT_CHAT_ID:
+        settings = await get_settings(message.chat.id)
         try:
-            # Register the group automatically on its first normal message.
-            # Group admins do not need to run /start or /settings.
-            if not await db.get_chat(message.chat.id):
-                await db.add_chat(message.chat.id, message.chat.title or "Unknown Group")
-
-            settings = await get_settings(message.chat.id)
-            if settings.get('auto_ffilter', True):
-                if re.search(r'https?://\\S+|www\\.\\S+|t\\.me/\\S+', message.text):
+            if settings['auto_ffilter']:
+                if re.search(r'https?://\S+|www\.\S+|t\.me/\S+', message.text):
                     if await is_check_admin(client, message.chat.id, message.from_user.id):
                         return
                     return await message.delete()
                 await auto_filter(client, message)
+        except KeyError:
+            await save_group_settings(message.chat.id, 'auto_ffilter', True)
+            settings = await get_settings(message.chat.id)
+            if settings['auto_ffilter']:
+                await auto_filter(client, message) 
         except Exception as e:
-            logger.exception("Error in group auto filter: %s", e)
+            logger.exception("Error in auto filter: %s", e)
+            pass
     else:
         search = message.text
         _, _, total_results = await get_search_results(chat_id=message.chat.id, query=search.lower(), offset=0, filter=True)
