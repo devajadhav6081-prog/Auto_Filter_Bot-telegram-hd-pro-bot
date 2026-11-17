@@ -9,6 +9,7 @@ from dreamxbotz.Bot import multi_clients, work_loads
 from dreamxbotz.server.exceptions import FIleNotFound, InvalidHash
 from dreamxbotz.util.custom_dl import ByteStreamer
 from dreamxbotz.util.render_template import render_page
+from utils import temp
 import info
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,34 @@ async def favicon_route_handler(request):
 @routes.get("/", allow_head=True)
 async def root_route_handler(request):
     return web.json_response("dreamxbotz")
+
+
+@routes.get("/app", allow_head=True)
+async def custom_menu_handler(request: web.Request):
+    html = """<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#10131d"><title>Auto Filter Bot Menu</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{color-scheme:dark;--text:var(--tg-theme-text-color,#f4f6ff);--muted:var(--tg-theme-hint-color,#aab1c5);--panel:rgba(255,255,255,.075);--line:rgba(255,255,255,.15)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:26px 18px 34px;background:radial-gradient(circle at 15% 0%,#273a65 0,transparent 38%),radial-gradient(circle at 100% 100%,#49265d 0,transparent 38%),var(--tg-theme-bg-color,#10131d);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:520px;margin:auto}.top{text-align:center;padding:12px 8px 24px}.logo{width:68px;height:68px;margin:0 auto 14px;border-radius:22px;display:grid;place-items:center;font-size:34px;background:linear-gradient(135deg,#6b8cff,#b66bff);box-shadow:0 12px 34px #6b8cff45}.eyebrow{font-size:11px;letter-spacing:3px;color:var(--muted)}h1{font-size:25px;margin:8px 0 6px}.sub{font-size:13px;color:var(--muted);margin:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.item{min-height:112px;border:1px solid var(--line);border-radius:20px;padding:18px 14px;text-align:left;color:var(--text);background:var(--panel);backdrop-filter:blur(18px);box-shadow:0 8px 28px #0002;cursor:pointer;font:inherit;transition:transform .15s,border-color .15s}.item:active{transform:scale(.97)}.item:first-child{grid-column:1/-1;min-height:92px;background:linear-gradient(120deg,#5478df33,#a35be533)}.ico{display:block;font-size:25px;margin-bottom:10px}.name{display:block;font-weight:750;font-size:14px;letter-spacing:.5px}.desc{display:block;font-size:11px;color:var(--muted);margin-top:4px}.footer{text-align:center;color:var(--muted);font-size:11px;margin-top:24px}
+</style></head><body><div class="wrap">
+<header class="top"><div class="logo">🎬</div><div class="eyebrow">WELCOME TO</div><h1>AUTO FILTER BOT</h1><p class="sub">Choose an option to continue</p></header>
+<main class="grid">
+<button class="item" onclick="addGroup()"><span class="ico">➕</span><span class="name">ADD ME TO YOUR GROUP</span><span class="desc">Add the bot to your Telegram group</span></button>
+<button class="item" onclick="sendAction('help')"><span class="ico">📢</span><span class="name">HELP</span><span class="desc">How to use the bot</span></button>
+<button class="item" onclick="sendAction('about')"><span class="ico">📖</span><span class="name">ABOUT</span><span class="desc">Bot information</span></button>
+<button class="item" onclick="sendAction('topsearch')"><span class="ico">⭐</span><span class="name">TOP SEARCHING</span><span class="desc">Popular searches</span></button>
+<button class="item" onclick="sendAction('premium')"><span class="ico">🎟️</span><span class="name">UPGRADE</span><span class="desc">View available plans</span></button>
+</main><div class="footer">Secure • Simple • Fast</div></div>
+<script>const tg=window.Telegram?.WebApp;if(tg){tg.ready();tg.expand();}
+function sendAction(action){if(tg){tg.sendData(action);}else{alert('Please open this menu from the bot in Telegram.');}}
+function addGroup(){window.location.href='https://t.me/__BOT_USERNAME__?startgroup=true';}</script>
+</body></html>"""
+    html = html.replace("__BOT_USERNAME__", temp.U_NAME or "")
+    return web.Response(text=html, content_type="text/html")
 
 @routes.get(r"/watch/{path:\S+}", allow_head=True)
 async def watch_handler(request: web.Request):
