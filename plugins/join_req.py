@@ -7,7 +7,7 @@ from info import ADMINS, AUTH_REQ_CHANNELS
 from pyrogram.filters import create
 
 def is_auth_req_channel(_, __, update):
-    return update.chat.id in AUTH_REQ_CHANNELS
+    return int(update.chat.id) in {int(ch) for ch in AUTH_REQ_CHANNELS}
 
 @Client.on_chat_join_request(create(is_auth_req_channel))
 async def join_reqs(client, message: ChatJoinRequest):
@@ -26,7 +26,7 @@ async def clear_member_request(client, update):
     # Remove the pending-request record as soon as the request is approved
     # or the user leaves/is removed. This prevents an old request from
     # hiding the Request to Join button after the user leaves later.
-    if int(update.chat.id) not in AUTH_REQ_CHANNELS:
+    if int(update.chat.id) not in {int(ch) for ch in AUTH_REQ_CHANNELS}:
         return
 
     member = update.new_chat_member
