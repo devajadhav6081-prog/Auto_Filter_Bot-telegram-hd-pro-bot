@@ -16,6 +16,7 @@ from dreamxbotz.util.custom_dl import ByteStreamer
 from dreamxbotz.util.render_template import render_page
 import info
 from utils import temp
+from database.ia_filterdb import dreamxbotz_fetch_media, dreamxbotz_clean_title
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,35 @@ async def mini_app_handler(request: web.Request):
     except Exception as e:
         logger.exception('Mini App page error: %s', e)
         raise web.HTTPInternalServerError(text='Mini App is unavailable')
+
+
+@routes.get('/api/app/movies')
+async def app_movies_handler(request: web.Request):
+    """Return the latest unique movie titles from the existing media database."""
+    try:
+        files = await dreamxbotz_fetch_media(150)
+        movies = []
+        seen = set()
+        series_pattern = re.compile(
+            r"(?:\\bS\\d{1,2}\\b|\\bSeason\\s*\\d+|\\bEpisode\\s*\\d+|\\bE\\d{1,2}\\b)",
+            re.IGNORECASE,
+        )
+        for file in files:
+            file_name = getattr(file, "file_name", "") or ""
+            if not file_name or series_pattern.search(file_name):
+                continue
+            title = await dreamxbotz_clean_title(file_name)
+            title = re.sub(r"\\s+", " ", title).strip()
+            key = title.casefold()
+            if title and key not in seen:
+                seen.add(key)
+                movies.append({"title": title})
+            if len(movies) >= 60:
+                break
+        return web.json_response({"movies": movies})
+    except Exception as e:
+        logger.exception("Mini App movie catalog error: %s", e)
+        raise web.HTTPInternalServerError(text="Movie catalog is temporarily unavailable")
 
 
 @routes.post('/api/app/search')
