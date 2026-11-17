@@ -283,10 +283,9 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
 🎬 ǫᴜᴀʟɪᴛʏ : <b>{quality}</b>
 🔉 ᴀᴜᴅɪᴏ : <b>{language}</b>
 🌟 ʀᴀᴛɪɴɢ : <b>{rating}/10</b>
-{episodes}</blockquote>
-─┉─•✦•─┉─
+{episodes}</blockquote>─┉─•✦•─┉─
 
-🔍 <b>Sᴇᴀʀᴄʜ →</b> {search_link}
+🔍 <b>Sᴇᴀʀᴄʜ →</b> {search_link} 🔍
 """
 
 
