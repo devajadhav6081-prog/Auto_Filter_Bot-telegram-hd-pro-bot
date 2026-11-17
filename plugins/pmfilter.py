@@ -905,6 +905,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
             btn = []
             if fsub_channels:
                 btn += await is_subscribed(client, query.from_user.id, fsub_channels)
+            # A member or a user with a pending join request is allowed through.
+            if AUTH_REQ_CHANNELS:
+                btn += await is_req_subscribed(client, query.from_user.id, AUTH_REQ_CHANNELS)
             if btn:
                 btn.append([InlineKeyboardButton("♻️ ᴛʀʏ ᴀɢᴀɪɴ ♻️", callback_data=f"checksub#{kk}#{file_id}")])
                 await query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup(btn))
@@ -1474,6 +1477,17 @@ async def auto_filter(client, msg, spoll=False):
                 return
             if PREFIX_COMMAND_REGEX.match(message.text):
                 return
+            # User must be a channel member OR have a recorded pending join request.
+            if AUTH_REQ_CHANNELS and not await db.has_premium_access(message.from_user.id):
+                req_buttons = await is_req_subscribed(client, message.from_user.id, AUTH_REQ_CHANNELS)
+                if req_buttons:
+                    rows = [[button] for button in req_buttons]
+                    await message.reply_text(
+                        script.FORCESUB_TXT.format(message.from_user.mention),
+                        reply_markup=InlineKeyboardMarkup(rows),
+                        parse_mode=enums.ParseMode.HTML
+                    )
+                    return
             if len(message.text) < 100:
                 message_text = message.text or ""
                 search = message_text.lower()
