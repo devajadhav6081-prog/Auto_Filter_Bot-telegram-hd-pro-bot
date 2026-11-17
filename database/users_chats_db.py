@@ -44,26 +44,36 @@ class Database:
         return True
  
      
-    async def add_join_req(self, user_id: int, channel_id: int): #update
+    async def add_join_req(self, user_id: int, channel_id: int):
+        # Store an explicit pending-request timestamp for each channel.
+        # Legacy "channels" records are not treated as pending requests.
         await self.req.update_one(
-            {'user_id': user_id},
+            {'user_id': int(user_id)},
             {
-                '$addToSet': {'channels': channel_id},
+                '$addToSet': {'channels': int(channel_id)},
+                '$set': {f'pending_channels.{int(channel_id)}': datetime.datetime.utcnow()},
                 '$setOnInsert': {'created_at': datetime.datetime.utcnow()}
             },
             upsert=True
         )
-        
+
     async def has_joined_channel(self, user_id: int, channel_id: int):
-        doc = await self.req.find_one({'user_id': user_id})
-        return doc and 'channels' in doc and channel_id in doc['channels']
+        # Only a recent, explicit pending-request record is accepted.
+        doc = await self.req.find_one({'user_id': int(user_id)})
+        pending = (doc or {}).get('pending_channels', {}).get(str(int(channel_id)))
+        if not isinstance(pending, datetime.datetime):
+            return False
+        return pending >= datetime.datetime.utcnow() - datetime.timedelta(days=30)
 
     async def remove_join_req(self, user_id: int, channel_id: int):
         await self.req.update_one(
-            {'user_id': user_id},
-            {'$pull': {'channels': channel_id}}
+            {'user_id': int(user_id)},
+            {
+                '$pull': {'channels': int(channel_id)},
+                '$unset': {f'pending_channels.{int(channel_id)}': ""}
+            }
         )
-        await self.req.delete_one({'user_id': user_id, 'channels': {'$size': 0}})
+        await self.req.delete_one({'user_id': int(user_id), 'channels': {'$size': 0}})
 
     async def del_join_req(self):
         await self.req.drop()
