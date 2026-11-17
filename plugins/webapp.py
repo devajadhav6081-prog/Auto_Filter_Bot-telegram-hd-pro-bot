@@ -35,5 +35,5 @@ async def custom_menu_actions(client, message):
             [InlineKeyboardButton("UPI ID Copy Karein ??", copy_text=CopyTextButton(text=OWNER_UPI_ID), style=enums.ButtonStyle.PRIMARY)],
             [InlineKeyboardButton("❌ ᴄʟᴏꜱᴇ ❌", callback_data="close_data", style=enums.ButtonStyle.DANGER)]
         ]
-        return await message.reply_photo(photo=SUBSCRIPTION, caption=script.PREPLANS_TXT.format(message.from_user.mention, OWNER_UPI_ID, QR_CODE), reply_markup=InlineKeyboardMarkup(buttons), parse_mode=enums.ParseMode.HTML)
+        return await message.reply_photo(photo=SUBSCRIPTION, caption=script.PREPLANS_TXT.replace("{}", message.from_user.mention, 1).replace("{}", OWNER_UPI_ID, 1), reply_markup=InlineKeyboardMarkup(buttons), parse_mode=enums.ParseMode.HTML)
     await message.reply_text("Please choose an option from the custom menu.")
