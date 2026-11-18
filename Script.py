@@ -269,7 +269,7 @@ Nᴀᴍᴇ : {}
 
 Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
     
-    CAPTION = """<b><a href="https://t.me/+y9h1tvj0jpg5Y2Q1">{file_name} {extension}</a></b>\n\n<b>⚜️ Powered By : <a href="https://t.me/FilmsChor">[ FilmsChor ]</a></b>"""
+    CAPTION = """<b><a href="https://t.me/+y9h1tvj0jpg5Y2Q1">{file_name}</a></b>\n\n<b>⚜️ Powered By : <a href="https://t.me/FilmsChor">[ FilmsChor ]</a></b>"""
 
     
     MOVIE_UPDATE_NOTIFY_TXT = """
