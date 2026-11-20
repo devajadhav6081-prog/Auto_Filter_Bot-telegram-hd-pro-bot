@@ -36,18 +36,18 @@ async def notify_daily_file_status(client, user_id: int):
     if count <= 3:
         remaining = 3 - count
         text = (
-            f"🎁 ꜰʀᴇᴇ ꜰɪʟᴇ {count}/3 — ɴᴏ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ɴᴇᴇᴅᴇᴅ!\\n"
+            f"🎁 ꜰʀᴇᴇ ꜰɪʟᴇ {count}/3 — ɴᴏ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ɴᴇᴇᴅᴇᴅ!\n"
             f"{remaining} ꜰʀᴇᴇ ꜰɪʟᴇ(s) ʟᴇꜰᴛ ʙᴇꜰᴏʀᴇ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ꜱᴛᴀʀᴛꜱ."
         )
     elif count < 7:
         remaining = 7 - count
         text = (
-            f"🎁 ꜰʀᴇᴇ ꜰɪʟᴇ {count}/7 — ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ᴄᴏᴍᴘʟᴇᴛᴇ!\\n"
+            f"🎁 ꜰʀᴇᴇ ꜰɪʟᴇ {count}/7 — ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ᴄᴏᴍᴘʟᴇᴛᴇ!\n"
             f"{remaining} ꜰɪʟᴇ(s) ʟᴇꜰᴛ ᴛᴏᴅᴀʏ."
         )
     else:
         text = (
-            "🎁 ꜰʀᴇᴇ ꜰɪʟᴇ 7/7 — ᴛᴏᴅᴀʏ'ꜱ ʟɪᴍɪᴛ ᴄᴏᴍᴘʟᴇᴛᴇ!\\n"
+            "🎁 ꜰʀᴇᴇ ꜰɪʟᴇ 7/7 — ᴛᴏᴅᴀʏ'ꜱ ʟɪᴍɪᴛ ᴄᴏᴍᴘʟᴇᴛᴇ!\n"
             "ɴᴇxᴛ ғʀᴇᴇ ғɪʟᴇꜱ ᴡɪʟʟ ʙᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏᴍᴏʀʀᴏᴡ."
         )
     await client.send_message(chat_id=user_id, text=text)
@@ -342,7 +342,7 @@ async def start(client, message):
             verified_today = await db.is_user_verified(user_id)
             if daily_file_count >= 7:
                 return await message.reply_text(
-                    "🎁 ᴀᴀᴊ ᴋɪ 7/7 ꜰʀᴇᴇ ꜰɪʟᴇ ʟɪᴍɪᴛ ᴘᴜʀɪ ʜᴏ ɢᴀʏɪ ʜᴀɪ.\\nᴋʀɪᴘʏᴀ ᴋᴀʟ ᴅᴏʙᴀʀᴀ ᴛʀʏ ᴋᴀʀᴇɪɴ."
+                    "🎁 ᴀᴀᴊ ᴋɪ 7/7 ꜰʀᴇᴇ ꜰɪʟᴇ ʟɪᴍɪᴛ ᴘᴜʀɪ ʜᴏ ɢᴀʏɪ ʜᴀɪ.\nᴋʀɪᴘʏᴀ ᴋᴀʟ ᴅᴏʙᴀʀᴀ ᴛʀʏ ᴋᴀʀᴇɪɴ."
                 )
             try:
                 grp_id = int(grp_id)
@@ -364,7 +364,7 @@ async def start(client, message):
                         ]]
                         n=await m.reply_text(
                             text=(
-                                "🎁 3/3 ғʀᴇᴇ ꜰɪʟᴇꜱ ᴜꜱᴇᴅ!\\n"
+                                "🎁 3/3 ғʀᴇᴇ ꜰɪʟᴇꜱ ᴜꜱᴇᴅ!\n"
                                 "ᴀɢʟɪ 4 ꜰɪʟᴇꜱ ᴘᴀᴀɴᴇ ᴋᴇ ʟɪʏᴇ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ᴘᴜʀᴀ ᴋᴀʀᴇɪɴ."
                             ),
                             protect_content=True,
