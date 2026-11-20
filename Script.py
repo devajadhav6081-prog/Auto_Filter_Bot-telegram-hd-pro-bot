@@ -1,7 +1,7 @@
 class script(object):
-    START_TXT = """<b>HEY {}, {}</b>
+    START_TXT = """<b>ʜᴇʏ {}, {}</b>
 
-<b>🤖 I AM <a href=https://t.me/{}>{}</a>, THE MOST POWERFUL AUTO FILTER BOT WITH PREMIUM FEATURES.</b>
+<b>🤖 I AM <a href=https://t.me/{}>{}</a>,  ᴛʜᴇ ᴍᴏꜱᴛ ᴘᴏᴡᴇʀꜰᴜʟ Sᴛᴏʀʏ Tᴠ bot ʙᴏᴛ ᴡɪᴛʜ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇꜱ.</b>
 """
 
  GSTART_TXT = """<b></b>
