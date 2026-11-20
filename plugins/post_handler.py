@@ -12,6 +12,7 @@ from pyrogram.types import (
 from pyrogram.errors import MessageNotModified, MessageTooLong
 from plugins.Dreamxfutures.Imdbposter import get_movie_detailsx
 from info import ADMINS, MOVIE_UPDATE_CHANNEL, ABOVE_PREVIEW
+from database.ia_filterdb import get_search_results
 from utils import temp
 
 #code is created by @bharath_boy for public use so atleast don't remove credits
@@ -142,6 +143,38 @@ async def post_command(client: Client, message: Message):
 
     await start_post_session(client, message, user_id, movie_name)
 
+async def _get_database_video_cover(movie_details: dict):
+    """Find the saved embedded video cover for this movie in the indexed file database."""
+    title = str(movie_details.get("title") or "").strip()
+    year = str(movie_details.get("year") or "").strip()
+    if not title:
+        return None
+
+    queries = []
+    if year:
+        queries.append(f"{title} {year}")
+    queries.append(title)
+
+    for search_text in queries:
+        try:
+            files, _, _ = await get_search_results(
+                None, search_text, file_type="video", max_results=20
+            )
+            for file in files:
+                cover = getattr(file, "cover", None)
+                if cover:
+                    logger.info(
+                        "Found embedded database video cover for '%s' from '%s'.",
+                        title, getattr(file, "file_name", "unknown")
+                    )
+                    return cover
+        except Exception:
+            logger.exception(
+                "Could not search database video covers for '%s'.", search_text
+            )
+    return None
+
+
 #code is created by @bharath_boy for public use so atleast don't remove credits
 async def start_post_session(client: Client, message: Message, user_id: int, movie_name: str):
     movie_details = await get_movie_detailsx(movie_name)
@@ -156,9 +189,12 @@ async def start_post_session(client: Client, message: Message, user_id: int, mov
         except Exception:
             pass
 
+    database_cover = await _get_database_video_cover(movie_details)
+
     post_sessions[user_id] = {
         "movie_name": movie_name, "caption": None, "buttons": [],
-        "photo_mode": False,
+        "photo_mode": bool(database_cover),
+        "database_cover": database_cover,
         "use_landscape": True if movie_details.get("backdrop_url") else False,
         "custom_languages": [], "custom_resolutions": [], "custom_otts": [],
         "last_preview_message_id": None, "original_message_id": message.id,
@@ -213,9 +249,15 @@ async def _build_final_post_content(session: dict, session_id: int):
         final_caption += f"\n\n{session['watermark']}"
 
     keyboard = build_keyboard(session, session_id)
-    poster_to_use = session.get("custom_poster") or \
-        (movie_details.get("backdrop_url") if session.get(
-            "use_landscape") else movie_details.get("poster_url"))
+    tmdb_poster = (
+        movie_details.get("backdrop_url") if session.get("use_landscape")
+        else movie_details.get("poster_url")
+    )
+    poster_to_use = (
+        session.get("custom_poster")
+        or (session.get("database_cover") if session.get("photo_mode") else None)
+        or tmdb_poster
+    )
 
     return final_caption, keyboard, poster_to_use
 
