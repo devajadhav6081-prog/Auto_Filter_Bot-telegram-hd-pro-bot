@@ -89,12 +89,12 @@ async def start(client, message):
             else:
                 msg = script.SECOND_VERIFY_COMPLETE_TEXT if key == "second_time_verified" else script.VERIFY_COMPLETE_TEXT
             if message.command[1].startswith('sendall'):
-                verifiedfiles = f"https://telegram.me/{temp.U_NAME}?start=allfiles_{grp_id}_{file_id}"
+                verifiedfiles = f"https://telegram.me/{temp.U_NAME}?start=retryall_{grp_id}_{file_id}"
             else:
-                verifiedfiles = f"https://telegram.me/{temp.U_NAME}?start=file_{grp_id}_{file_id}"
+                verifiedfiles = f"https://telegram.me/{temp.U_NAME}?start=retry_{grp_id}_{file_id}"
             await client.send_message(settings['log'], script.VERIFIED_LOG_TEXT.format(m.from_user.mention, user_id, datetime.now(TZ).strftime('%d %B %Y'), num))
             btn = [[
-                InlineKeyboardButton("✅ ᴄʟɪᴄᴋ ʜᴇʀᴇ ᴛᴏ ɢᴇᴛ ꜰɪʟᴇ ✅", url=verifiedfiles),
+                InlineKeyboardButton("♻️ ᴛʀʏ ᴀɢᴀɪɴ ♻️", url=verifiedfiles),
             ]]
             reply_markup = InlineKeyboardMarkup(btn)
             dlt=await m.reply_photo(
@@ -278,6 +278,26 @@ async def start(client, message):
             raise StopPropagation
 
         data = message.command[1]
+        # The retry deep-link is accepted only after verification (or for premium users).
+        # It then continues through the same normal file-delivery and force-join checks.
+        if data.startswith(("retry_", "retryall_")):
+            retry_all = data.startswith("retryall_")
+            retry_payload = data[len("retryall_"):] if retry_all else data[len("retry_"):]
+            try:
+                retry_grp_id, retry_file_id = retry_payload.split("_", 1)
+                retry_user_id = message.from_user.id
+                retry_premium = await db.has_premium_access(retry_user_id)
+                retry_verified = await db.is_daily_verified_today(retry_user_id)
+                if not retry_premium and not retry_verified:
+                    return await message.reply_text(
+                        "⚠️ ᴘᴇʜʟᴇ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ᴘᴜʀᴀ ᴋᴀʀᴇɪɴ, ᴘʜɪʀ ᴛʀʏ ᴀɢᴀɪɴ ᴅᴀʙᴀʏᴇɪɴ."
+                    )
+                await message.reply_text(
+                    "🎉 ᴄᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs! ᴀᴀᴘᴋɪ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ᴄᴏᴍᴘʟᴇᴛᴇ ʜᴏ ɢᴀʏɪ. ʏᴇ ʟᴏ ᴀᴀᴘᴋɪ ꜰɪʟᴇ/ᴍᴏᴠɪᴇ! 🎬"
+                )
+                data = f"{'allfiles' if retry_all else 'file'}_{retry_grp_id}_{retry_file_id}"
+            except Exception:
+                return await message.reply_text("⚠️ ɪɴᴠᴀʟɪᴅ ᴛʀʏ ᴀɢᴀɪɴ ʟɪɴᴋ. ᴘʟᴇᴀsᴇ ʀᴇǫᴜᴇsᴛ ᴛʜᴇ ꜰɪʟᴇ ᴀɢᴀɪɴ.")
         try:
             _, grp_id, file_id = data.split("_", 2)
             grp_id = int(grp_id)
@@ -367,8 +387,15 @@ async def start(client, message):
                         if not isinstance(verify, str) or not verify.startswith(("https://", "http://")):
                             logger.error("Shortener returned an invalid verification URL; using bot deep link.")
                             verify = original_verify_link
+                        retry_link = (
+                            f"https://telegram.me/{temp.U_NAME}?start=retryall_{grp_id}_{file_id}"
+                            if message.command[1].startswith('allfiles')
+                            else f"https://telegram.me/{temp.U_NAME}?start=retry_{grp_id}_{file_id}"
+                        )
                         buttons = [[
                             InlineKeyboardButton(text="♻️ ᴄʟɪᴄᴋ ʜᴇʀᴇ ᴛᴏ ᴠᴇʀɪꜰʏ ♻️", url=verify)
+                        ], [
+                            InlineKeyboardButton(text="🔄 ᴛʀʏ ᴀɢᴀɪɴ 🔄", url=retry_link)
                         ]]
                         howtodownload = settings.get('tutorial', TUTORIAL)
                         if isinstance(howtodownload, str) and howtodownload.startswith(("https://", "http://")):
