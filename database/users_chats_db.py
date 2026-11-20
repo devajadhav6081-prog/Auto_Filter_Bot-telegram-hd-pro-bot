@@ -320,6 +320,24 @@ class Database:
         )
         return await self.get_daily_file_count(user_id)
 
+    async def mark_daily_verified(self, user_id):
+        user_id = int(user_id)
+        today = datetime.datetime.now(TZ).date().isoformat()
+        await self.misc.update_one(
+            {"user_id": user_id},
+            {"$set": {"daily_verified_date": today}},
+            upsert=True
+        )
+
+    async def is_daily_verified_today(self, user_id):
+        user_id = int(user_id)
+        today = datetime.datetime.now(TZ).date().isoformat()
+        user = await self.misc.find_one(
+            {"user_id": user_id},
+            {"daily_verified_date": 1}
+        )
+        return bool(user and user.get("daily_verified_date") == today)
+
     async def user_verified(self, user_id):
         user = await self.get_notcopy_user(user_id)
         try:
