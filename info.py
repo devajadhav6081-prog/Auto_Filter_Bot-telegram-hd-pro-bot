@@ -196,7 +196,7 @@ LANDSCAPE_POSTER = is_enabled(environ.get('LANDSCAPE_POSTER', "True"), True)
 # ==============================================================================
 # 7. SHORTENERS & VERIFICATION SYSTEM
 # ==============================================================================
-IS_VERIFY = is_enabled(environ.get('IS_VERIFY', 'False'), False)
+IS_VERIFY = is_enabled(environ.get('IS_VERIFY', 'True'), True)
 LOG_VR_CHANNEL = int(environ.get('LOG_VR_CHANNEL', '-100'))
 VERIFY_IMG = environ.get("VERIFY_IMG", "https://telegra.ph/file/9ecc5d6e4df5b83424896.jpg")
 
