@@ -401,11 +401,20 @@ async def get_shortlink(link, grp_id, is_second_shortener=False, is_third_shorte
         else:
             api, site = settings['api'], settings['shortner']
     shortzy = Shortzy(api, site)
+    original_link = link
     try:
-        link = await shortzy.convert(link)
-    except Exception:
-        link = await shortzy.get_quick_link(link)
-    return link
+        short_link = await shortzy.convert(original_link)
+        if isinstance(short_link, str) and short_link.startswith(("https://", "http://")):
+            return short_link
+    except Exception as e:
+        logging.warning("Shortener convert failed; using direct verification link: %s", e)
+    try:
+        short_link = await shortzy.get_quick_link(original_link)
+        if isinstance(short_link, str) and short_link.startswith(("https://", "http://")):
+            return short_link
+    except Exception as e:
+        logging.warning("Shortener quick-link failed; using direct verification link: %s", e)
+    return original_link
 
 async def get_settings(group_id):
     try:
