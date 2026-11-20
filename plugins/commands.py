@@ -79,6 +79,7 @@ async def start(client, message):
             current_time = datetime.now(tz=TZ)
             await db.update_notcopy_user(user_id, {key:current_time})
             await db.update_verify_id_info(user_id, verify_id, {"verified":True})
+            await db.mark_daily_verified(user_id)
             if key == "third_time_verified": 
                 num = 3 
             else: 
@@ -339,7 +340,7 @@ async def start(client, message):
         verified_today = False
         if not is_premium:
             daily_file_count = await db.get_daily_file_count(user_id)
-            verified_today = await db.is_user_verified(user_id)
+            verified_today = await db.is_daily_verified_today(user_id)
             if daily_file_count >= 7:
                 return await message.reply_text(
                     "🎁 ᴀᴀᴊ ᴋɪ 7/7 ꜰʀᴇᴇ ꜰɪʟᴇ ʟɪᴍɪᴛ ᴘᴜʀɪ ʜᴏ ɢᴀʏɪ ʜᴀɪ.\nᴋʀɪᴘʏᴀ ᴋᴀʟ ᴅᴏʙᴀʀᴀ ᴛʀʏ ᴋᴀʀᴇɪɴ."
@@ -535,6 +536,8 @@ async def start(client, message):
                 reply_markup=InlineKeyboardMarkup(btn)
             )
         
+        if not is_premium:
+            await notify_daily_file_status(client, user_id)
         k = await msg.reply(script.DEL_MSG.format(get_time(DELETE_TIME)), parse_mode=enums.ParseMode.HTML)
         await asyncio.sleep(DELETE_TIME)
         await msg.delete()
