@@ -256,7 +256,10 @@ async def media_handler(client, message):
     media.file_type = next(ft for ft in ("document", "video", "audio") if getattr(message, ft, None))
     media.caption = message.caption or ""
     success, info = await save_file(media)
-    if not success:
+    # A duplicate database upload may still need its channel post created/recovered.
+    # Continue only for success or the known duplicate result (info == 0).
+    if not success and info != 0:
+        logger.error("Could not save '%s' to the file database (save status: %s).", media.file_name, info)
         return
 
     try:
@@ -298,14 +301,33 @@ async def _process_with_lock(client, filename, caption, media_info, base_name, p
     }
 
     if not movie_doc:
+        # Online metadata is optional: a missing/unavailable TMDB or IMDb result
+        # must never prevent a database upload from being announced in the channel.
+        details = {}
         if TMDB_POSTER:
-            details = await get_movie_detailsx(base_name)
+            try:
+                details = await get_movie_detailsx(base_name) or {}
+            except Exception:
+                logger.exception("TMDB lookup failed for '%s'; continuing without online details.", base_name)
+                details = {}
+
             if not details or details.get("error") or (not details.get("poster_url") and not details.get("backdrop_url")):
-                error_tmdb=True
-                logger.info("TMDB error switching to IMDB")
-                details = await get_movie_details(base_name) or {}
+                error_tmdb = True
+                logger.info("TMDB details/poster unavailable for '%s'; trying IMDb as a fallback.", base_name)
+                try:
+                    details = await get_movie_details(base_name) or {}
+                except Exception:
+                    logger.exception("IMDb lookup failed for '%s'; posting with filename only.", base_name)
+                    details = {}
         else:
-            details = await get_movie_details(base_name) or {}
+            try:
+                details = await get_movie_details(base_name) or {}
+            except Exception:
+                logger.exception("IMDb lookup failed for '%s'; posting with filename only.", base_name)
+                details = {}
+
+        if not isinstance(details, dict):
+            details = {}
 
         raw_genres = details.get("genres", "N/A")
         if isinstance(raw_genres, str):
@@ -345,6 +367,9 @@ async def _process_with_lock(client, filename, caption, media_info, base_name, p
                 schedule_update(client, base_name)
     else:
         if any(f["filename"] == filename for f in movie_doc["files"]):
+            # Recover a missing channel post for files that were indexed earlier.
+            if not movie_doc.get("message_id"):
+                await send_movie_update(client, base_name)
             return
         await db.movie_updates.update_one(
             {"_id": base_name},
