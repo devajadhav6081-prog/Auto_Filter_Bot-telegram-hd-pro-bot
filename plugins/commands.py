@@ -105,13 +105,13 @@ async def start(client, message):
             await client.send_message(LOG_CHANNEL, script.LOG_TEXT_P.format(message.from_user.id, message.from_user.mention))
         if len(message.command) != 2:
             buttons = [[
-                        InlineKeyboardButton('🔰 𝘼𝘿𝘿 𝙈𝙀 𝙏𝙊 𝙔𝙊𝙐𝙍 𝙂𝙍𝙊𝙐𝙋 🔰', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
+                        InlineKeyboardButton('📗 ADD ME TO YOUR GROUP 📗', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
                     ],[
-                        InlineKeyboardButton(' 𝗛𝗘𝗟𝗣 📢', callback_data='help'),
-                        InlineKeyboardButton(' 𝗔𝗕𝗢𝗨𝗧 📖', callback_data='about')
+                        InlineKeyboardButton('HELP 📢', callback_data='help'),
+                        InlineKeyboardButton('ABOUT 📖', callback_data='about')
                     ],[
-                        InlineKeyboardButton('𝗧𝗢𝗣 𝗦𝗘𝗔𝗥𝗖𝗛𝗜𝗡𝗚 ⭐', callback_data="topsearch"),
-                        InlineKeyboardButton('𝗨𝗣𝗚𝗥𝗔𝗗𝗘 🎟', callback_data="premium_info"),
+                        InlineKeyboardButton('TOP SEARCHING ⭐', callback_data="topsearch"),
+                        InlineKeyboardButton('UPGRADE 🎟️', callback_data="premium_info"),
                     ]]
             reply_markup = InlineKeyboardMarkup(buttons)
             current_time = datetime.now(TZ)
@@ -148,13 +148,13 @@ async def start(client, message):
 
         if len(message.command) == 2 and message.command[1] in ["subscribe", "error", "okay", "help"]:
             buttons = [[
-                        InlineKeyboardButton('🔰 ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ 🔰', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
+                        InlineKeyboardButton('📗 ADD ME TO YOUR GROUP 📗', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
                     ],[
-                        InlineKeyboardButton(' ʜᴇʟᴘ 📢', callback_data='help'),
-                        InlineKeyboardButton(' ᴀʙᴏᴜᴛ 📖', callback_data='about')
+                        InlineKeyboardButton('HELP 📢', callback_data='help'),
+                        InlineKeyboardButton('ABOUT 📖', callback_data='about')
                     ],[
-                        InlineKeyboardButton('ᴛᴏᴘ sᴇᴀʀᴄʜɪɴɢ ⭐', callback_data="topsearch"),
-                        InlineKeyboardButton('ᴜᴘɢʀᴀᴅᴇ 🎟', callback_data="premium_info"),
+                        InlineKeyboardButton('TOP SEARCHING ⭐', callback_data="topsearch"),
+                        InlineKeyboardButton('UPGRADE 🎟️', callback_data="premium_info"),
                     ]]
             reply_markup = InlineKeyboardMarkup(buttons)
             current_time = datetime.now(TZ)
