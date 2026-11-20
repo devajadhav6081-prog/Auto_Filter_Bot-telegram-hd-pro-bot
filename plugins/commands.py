@@ -317,7 +317,7 @@ async def start(client, message):
             try:
                 grp_id = int(grp_id)
                 settings = await get_settings(grp_id)
-                if settings.get("is_verify", IS_VERIFY):
+                if IS_VERIFY or settings.get("is_verify", False):
                     user_verified, is_second_shortener, is_third_shortener = await asyncio.gather(
                         db.is_user_verified(user_id),
                         db.use_second_shortener(user_id, settings.get('verify_time', TWO_VERIFY_GAP)),
