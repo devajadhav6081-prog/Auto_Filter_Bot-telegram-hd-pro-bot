@@ -659,14 +659,13 @@ async def save_file_handler(client, message):
 
 @Client.on_message(filters.command('delete') & filters.user(ADMINS))
 async def delete(client, message):
-    """Delete file from database"""
+    """Delete a file from the file database and sync its auto-post record."""
     reply = message.reply_to_message
-    if reply and reply.media:
-        msg = await message.reply("Pʀᴏᴄᴇssɪɴɢ...⏳")
-    else:
+    if not reply or not reply.media:
         await message.reply('Rᴇᴘʟʏ ᴛᴏ ғɪʟᴇ ᴡɪᴛʜ /delete ᴡʜɪᴄʜ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴅᴇʟᴇᴛᴇ')
         return
 
+    msg = await message.reply("Pʀᴏᴄᴇssɪɴɢ...⏳")
     for file_type in ("document", "video", "audio"):
         media = getattr(reply, file_type, None)
         if media is not None:
@@ -674,54 +673,93 @@ async def delete(client, message):
     else:
         await msg.edit('Tʜɪs ɪs ɴᴏᴛ sᴜᴘᴘᴏʀᴛᴇᴅ ғɪʟᴇ ғᴏʀᴍᴀᴛ')
         return
-    
-    file_id, file_ref = unpack_new_file_id(media.file_id)
-    if await Media.count_documents({'file_id': file_id}):
-        result = await Media.collection.delete_one({
-            '_id': file_id,
-        })
-    else:
-        result = await Media2.collection.delete_one({
-            '_id': file_id,
-        })
-    if result.deleted_count:
-        await msg.edit('Fɪʟᴇ ɪs sᴜᴄᴄᴇssғᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ ғʀᴏᴍ ᴅᴀᴛᴀʙᴀsᴇ ✅')
-    else:
-        file_name = re.sub(r"(_|\-|\.|\+)", " ", str(media.file_name))
-        result = await Media.collection.delete_many({
-            'file_name': file_name,
-            'file_size': media.file_size,
-            'mime_type': media.mime_type
-            })
-        if result.deleted_count:
-            await msg.edit('Fɪʟᴇ ɪs sᴜᴄᴄᴇssғᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ ғʀᴏᴍ ᴅᴀᴛᴀʙᴀsᴇ ✅')
+
+    try:
+        file_id, file_ref = unpack_new_file_id(media.file_id)
+        deleted_count = 0
+
+        if await Media.count_documents({'file_id': file_id}):
+            result = await Media.collection.delete_one({'_id': file_id})
         else:
-            result = await Media2.collection.delete_many({
+            result = await Media2.collection.delete_one({'_id': file_id})
+        deleted_count = result.deleted_count
+
+        if not deleted_count:
+            file_name = re.sub(r"(_|\-|\.|\+)", " ", str(media.file_name))
+            criteria = {
                 'file_name': file_name,
                 'file_size': media.file_size,
                 'mime_type': media.mime_type
-            })
-            if result.deleted_count:
-                await msg.edit('Fɪʟᴇ ɪs sᴜᴄᴄᴇssғᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ ғʀᴏᴍ ᴅᴀᴛᴀʙᴀsᴇ')
-            else:
-                result = await Media.collection.delete_many({
-                    'file_name': media.file_name,
-                    'file_size': media.file_size,
-                    'mime_type': media.mime_type
-                })
-                if result.deleted_count:
-                    await msg.edit('Fɪʟᴇ ɪs sᴜᴄᴄᴇssғᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ ғʀᴏᴍ ᴅᴀᴛᴀʙᴀsᴇ ✅')
-                else:
-                    result = await Media2.collection.delete_many({
-                        'file_name': media.file_name,
-                        'file_size': media.file_size,
-                        'mime_type': media.mime_type
-                    })
-                    if result.deleted_count:
-                        await msg.edit('Fɪʟᴇ ɪs sᴜᴄᴄᴇssғᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ ғʀᴏᴍ ᴅᴀᴛᴀʙᴀsᴇ ✅')
-                    else:
-                        await msg.edit('Fɪʟᴇ ɴᴏᴛ ғᴏᴜɴᴅ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ ❌')
+            }
+            result = await Media.collection.delete_many(criteria)
+            deleted_count = result.deleted_count
+            if not deleted_count:
+                result = await Media2.collection.delete_many(criteria)
+                deleted_count = result.deleted_count
+            if not deleted_count:
+                criteria['file_name'] = media.file_name
+                result = await Media.collection.delete_many(criteria)
+                deleted_count = result.deleted_count
+            if not deleted_count:
+                result = await Media2.collection.delete_many(criteria)
+                deleted_count = result.deleted_count
 
+        if not deleted_count:
+            await msg.edit('Fɪʟᴇ ɴᴏᴛ ғᴏᴜɴᴅ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ ❌')
+            return
+
+        # Keep the movie auto-post database in sync with the deleted file.
+        try:
+            if not hasattr(db, 'movie_updates'):
+                db.movie_updates = db.db.movie_updates
+
+            matching_movies = await db.movie_updates.find(
+                {'files.filename': media.file_name}
+            ).to_list(length=None)
+
+            for movie_doc in matching_movies:
+                await db.movie_updates.update_one(
+                    {'_id': movie_doc['_id']},
+                    {'$pull': {'files': {'filename': media.file_name}}}
+                )
+                updated_doc = await db.movie_updates.find_one({'_id': movie_doc['_id']})
+
+                if updated_doc and not updated_doc.get('files'):
+                    # No indexed files remain: remove the stale auto-post as well.
+                    message_id = updated_doc.get('message_id')
+                    if message_id:
+                        try:
+                            from plugins.channel import MOVIE_UPDATE_CHANNEL
+                            await client.delete_messages(
+                                chat_id=MOVIE_UPDATE_CHANNEL,
+                                message_ids=message_id
+                            )
+                        except Exception:
+                            logger.exception(
+                                "Could not delete empty movie auto-post for %s",
+                                movie_doc['_id']
+                            )
+                    await db.movie_updates.delete_one({'_id': movie_doc['_id']})
+                elif updated_doc:
+                    # Refresh the channel caption/quality list after removing one file.
+                    try:
+                        from plugins.channel import update_movie_message
+                        await update_movie_message(client, movie_doc['_id'])
+                    except Exception:
+                        logger.exception(
+                            "Could not refresh movie auto-post after deleting %s",
+                            media.file_name
+                        )
+        except Exception:
+            logger.exception(
+                "File deleted, but movie_updates cleanup failed for %s",
+                media.file_name
+            )
+
+        await msg.edit('Fɪʟᴇ ɪs sᴜᴄᴄᴇssғᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ ғʀᴏᴍ ᴅᴀᴛᴀʙᴀsᴇ ✅')
+    except Exception as e:
+        logger.exception("Error deleting indexed file: %s", e)
+        await msg.edit('Fɪʟᴇ ᴅᴇʟᴇᴛᴇ ᴋᴀʀᴛᴇ ᴡᴀᴋᴛ ᴇʀʀᴏʀ ᴀᴀʏᴀ ❌')
 
 @Client.on_message(filters.command('deleteall') & filters.user(ADMINS))
 async def delete_all_index(client, message):
