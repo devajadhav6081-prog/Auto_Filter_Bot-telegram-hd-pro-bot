@@ -429,9 +429,44 @@ async def send_movie_update(client, base_name):
                 msg = await client.send_message(**send_params)
                 is_photo = False
 
+            # Also publish every database upload to the additional channel.
+            # Keep the original MOVIE_UPDATE_CHANNEL as the primary destination.
+            extra_channel_id = -1004348619210
+            extra_msg_id = None
+            try:
+                if movie_doc.get("poster_url") and not LINK_PREVIEW and resized_poster:
+                    extra_msg = await client.send_photo(
+                        chat_id=extra_channel_id,
+                        photo=resized_poster,
+                        caption=text,
+                        reply_markup=buttons,
+                        parse_mode=enums.ParseMode.HTML
+                    )
+                else:
+                    extra_params = {
+                        "chat_id": extra_channel_id,
+                        "text": text,
+                        "reply_markup": buttons,
+                        "parse_mode": enums.ParseMode.HTML
+                    }
+                    if movie_doc.get("poster_url") and LINK_PREVIEW:
+                        extra_params["link_preview_options"] = LinkPreviewOptions(is_disabled=False, show_above_text=ABOVE_PREVIEW)
+                    else:
+                        extra_params["link_preview_options"] = LinkPreviewOptions(is_disabled=True)
+                    extra_msg = await client.send_message(**extra_params)
+                extra_msg_id = extra_msg.id
+            except Exception as extra_error:
+                logger.exception("Failed to publish '%s' to additional channel %s: %s", base_name, extra_channel_id, extra_error)
+
             await db.movie_updates.update_one(
                 {"_id": base_name},
-                {"$set": {"message_id": msg.id, "is_photo": is_photo}}
+                {"$set": {
+                    "message_id": msg.id,
+                    "is_photo": is_photo,
+                    "extra_channel_id": extra_channel_id,
+                    "extra_message_id": extra_msg_id,
+                    "extra_is_photo": bool(extra_msg_id and movie_doc.get("poster_url") and not LINK_PREVIEW and resized_poster)
+                }}
             )
             return msg
         except FloodWait as e:
@@ -462,6 +497,34 @@ async def update_movie_message(client, base_name):
         if not message_id:
             await send_movie_update(client, base_name)
             return
+
+        # Update the additional auto-post channel too, without changing the
+        # existing primary-channel message handling.
+        extra_channel_id = movie_doc.get("extra_channel_id", -1004348619210)
+        extra_message_id = movie_doc.get("extra_message_id")
+        if extra_message_id:
+            try:
+                if movie_doc.get("extra_is_photo", False):
+                    await client.edit_message_caption(
+                        chat_id=extra_channel_id,
+                        message_id=extra_message_id,
+                        caption=text,
+                        reply_markup=buttons,
+                        parse_mode=enums.ParseMode.HTML
+                    )
+                else:
+                    await client.edit_message_text(
+                        chat_id=extra_channel_id,
+                        message_id=extra_message_id,
+                        text=text,
+                        reply_markup=buttons,
+                        parse_mode=enums.ParseMode.HTML,
+                        link_preview_options=LinkPreviewOptions(is_disabled=True)
+                    )
+            except MessageNotModified:
+                pass
+            except Exception as extra_error:
+                logger.warning("Could not update additional channel post for %s: %s", base_name, extra_error)
 
         try:
             if is_photo:
