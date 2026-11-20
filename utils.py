@@ -494,7 +494,7 @@ def generate_settings_text(settings, title, reset_done=False):
 
 async def get_settings_text(grp_id, title):
     settings = await get_settings(grp_id)
-    verify_status = settings.get('is_verify', IS_VERIFY)
+    verify_status = IS_VERIFY or settings.get('is_verify', False)
     verify_text = "ᴏɴ" if verify_status else "ᴏꜰꜰ"
     log_channel = settings.get('log')
     log_text = f"<code>{log_channel}</code>" if log_channel else "ɴᴏᴛ ꜱᴇᴛ"
@@ -538,8 +538,8 @@ async def group_setting_buttons(grp_id):
                 InlineKeyboardButton('ꜱᴘᴇʟʟ ᴄʜᴇᴄᴋ',callback_data=f'setgs#spell_check#{settings["spell_check"]}#{str(grp_id)}'),
                 InlineKeyboardButton('✔ Oɴ' if settings["spell_check"] else '✘ Oғғ',callback_data=f'setgs#spell_check#{settings["spell_check"]}#{str(grp_id)}')
             ],[
-                InlineKeyboardButton('Vᴇʀɪғʏ', callback_data=f'setgs#is_verify#{settings.get("is_verify", IS_VERIFY)}#{grp_id}'),
-                InlineKeyboardButton('✔ Oɴ' if settings.get("is_verify", IS_VERIFY) else '✘ Oғғ', callback_data=f'setgs#is_verify#{settings.get("is_verify", IS_VERIFY)}#{grp_id}'),
+                InlineKeyboardButton('Vᴇʀɪғʏ', callback_data=f'setgs#is_verify#{(IS_VERIFY or settings.get("is_verify", False))}#{grp_id}'),
+                InlineKeyboardButton('✔ Oɴ' if (IS_VERIFY or settings.get("is_verify", False)) else '✘ Oғғ', callback_data=f'setgs#is_verify#{(IS_VERIFY or settings.get("is_verify", False))}#{grp_id}'),
             ],[
                 InlineKeyboardButton('ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ', callback_data=f'verification_setgs#{grp_id}'),
                 InlineKeyboardButton('ʟᴏɢ ᴄʜᴀɴɴᴇʟ', callback_data=f'log_setgs#{grp_id}'),
