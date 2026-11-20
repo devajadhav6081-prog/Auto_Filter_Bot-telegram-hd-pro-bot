@@ -357,12 +357,24 @@ async def start(client, message):
                             verify = await get_shortlink(f"https://telegram.me/{temp.U_NAME}?start=sendall_{user_id}_{verify_id}_{file_id}", grp_id, False, False)
                         else:
                             verify = await get_shortlink(f"https://telegram.me/{temp.U_NAME}?start=notcopy_{user_id}_{verify_id}_{file_id}", grp_id, False, False)
-                        howtodownload = settings.get('tutorial', TUTORIAL)
+                        # Shortener may fail or return an invalid URL when its API/domain
+                        # is not configured. Keep verification usable with the original deep link.
+                        original_verify_link = (
+                            f"https://telegram.me/{temp.U_NAME}?start=sendall_{user_id}_{verify_id}_{file_id}"
+                            if message.command[1].startswith('allfiles')
+                            else f"https://telegram.me/{temp.U_NAME}?start=notcopy_{user_id}_{verify_id}_{file_id}"
+                        )
+                        if not isinstance(verify, str) or not verify.startswith(("https://", "http://")):
+                            logger.error("Shortener returned an invalid verification URL; using bot deep link.")
+                            verify = original_verify_link
                         buttons = [[
                             InlineKeyboardButton(text="♻️ ᴄʟɪᴄᴋ ʜᴇʀᴇ ᴛᴏ ᴠᴇʀɪꜰʏ ♻️", url=verify)
-                        ],[
-                            InlineKeyboardButton(text="⁉️ ʜᴏᴡ ᴛᴏ ᴠᴇʀɪꜰʏ ⁉️", url=howtodownload)
                         ]]
+                        howtodownload = settings.get('tutorial', TUTORIAL)
+                        if isinstance(howtodownload, str) and howtodownload.startswith(("https://", "http://")):
+                            buttons.append([
+                                InlineKeyboardButton(text="⁉️ ʜᴏᴡ ᴛᴏ ᴠᴇʀɪꜰʏ ⁉️", url=howtodownload)
+                            ])
                         n=await m.reply_text(
                             text=(
                                 "🎁 3/3 ғʀᴇᴇ ꜰɪʟᴇꜱ ᴜꜱᴇᴅ!\n"
