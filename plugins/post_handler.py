@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 post_sessions = {}
 
 USE_GETFILE_BUTTON_BY_DEFAULT = True
-DEFAULT_WATERMARK = ""
+DEFAULT_WATERMARK = "Join [ᴅʀᴇᴀᴍxʙᴏᴛᴢ](https://t.me/dreamxbotz)"
 LANGUAGES_FORMAT = "➥ <b>Languages :</b> <code>{langs}</code>"
 RESOLUTIONS_FORMAT = "\n➥ <b>Qualities :</b> <code>{resolutions}</code>"
 OTT_FORMAT = "\n➥ <b>Available on :</b> <code>{otts}</code>"
@@ -47,11 +47,11 @@ TEMPLATES = {
 
 **Plot Summary**:
 {plot}""",
-    "divider_list": """🎬 {title}
+    "divider_list": """🎬 <b>{title}</b>
 
-📺 𝗪𝗮𝘁𝗰𝗵 𝗡𝗼𝘄 𝗙𝗼𝗿 𝗙𝗿𝗲𝗲!
+📺 <b>𝗪𝗮𝘁𝗰𝗵 𝗡𝗼𝘄 𝗙𝗼𝗿 𝗙𝗿𝗲𝗲!</b>
 ━━━━━━━━━━━━━━━━━━━
-🤖 𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆 @{bot_username} 🔍""",
+🤖 <b>𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆 @{bot_username}</b>""",
 
     "dashed_box": """- - - - - - - - - - - - - - - - - -
 🎥 <b>{title}</b>
