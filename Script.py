@@ -269,21 +269,11 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
     CAPTION = """<b><a href="https://t.me/+y9h1tvj0jpg5Y2Q1">{file_name}</a></b>\n\n<b>⚜️ Powered By : <a href="https://t.me/FilmsChor">[ FilmsChor ]</a></b>"""
 
     
-    MOVIE_UPDATE_NOTIFY_TXT = """
-<b>📥 ɴᴇᴡ {tag} ᴀᴅᴅᴇᴅ</b>
+    MOVIE_UPDATE_NOTIFY_TXT = """🎬 {filename}
 
-✨ ᴛɪᴛʟᴇ : <code>{filename} {year}</code>
-─┉─•✦•─┉─
-<blockquote>🎭 ɢᴇɴʀᴇs : <b>{genres}</b>
-🍿 ᴏᴛᴛ : <b>{ott}</b>
-⏱️ ʀᴜɴᴛɪᴍᴇ : <b>N/A</b>
-🎬 ǫᴜᴀʟɪᴛʏ : <b>{quality}</b>
-🔉 ᴀᴜᴅɪᴏ : <b>{language}</b>
-🌟 ʀᴀᴛɪɴɢ : <b>{rating}/10</b>
-{episodes}</blockquote>─┉─•✦•─┉─
-
-🔍 <b>Sᴇᴀʀᴄʜ →</b> {search_link} 🔍
-"""
+📺 𝗪𝗮𝘁𝗰𝗵 𝗡𝗼𝘄 𝗙𝗼𝗿 𝗙𝗿𝗲𝗲!
+━━━━━━━━━━━━━━━━━━━
+🤖 𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆 @{bot_username} 🔍"""
 
 
     IMDB_TEMPLATE_TXT = """<b><a href={url}>{title}</a> (<a href={url}/releaseinfo>{year}</a>)</b>
