@@ -566,5 +566,6 @@ def generate_movie_message(movie_doc, base_name):
         language=language_str,
         episodes=epi_block,
         rating=rating_text,
-        search_link=temp.B_LINK
+        search_link=temp.B_LINK,
+        bot_username=temp.U_NAME
 )
