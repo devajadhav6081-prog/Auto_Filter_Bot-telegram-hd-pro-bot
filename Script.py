@@ -4,8 +4,7 @@ class script(object):
 <b>🤖 I AM <a href=https://t.me/{}>{}</a>, THE MOST POWERFUL AUTO FILTER BOT WITH PREMIUM FEATURES.</b>
 """
 
-
-    GSTART_TXT = """<b></b>
+ GSTART_TXT = """<b></b>
 
 <b>ʜᴇʏ {},</b>
 
