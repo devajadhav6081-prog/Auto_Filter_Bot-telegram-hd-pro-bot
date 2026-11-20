@@ -2,7 +2,7 @@ import re
 import random
 import logging
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 from plugins.Dreamxfutures.Imdbposter import get_movie_detailsx, fetch_image, get_movie_details
 from database.users_chats_db import db
@@ -290,6 +290,26 @@ async def _process_with_lock(client, filename, caption, media_info, base_name, p
         db.movie_updates = db.db.movie_updates
 
     movie_doc = await db.movie_updates.find_one({"_id": base_name})
+
+    # Group uploads for the same title for 24 hours from the latest file.
+    # After that window, start a fresh channel post for the new upload cycle.
+    if movie_doc and movie_doc.get("files"):
+        latest_upload = max(
+            (item.get("timestamp") for item in movie_doc["files"] if item.get("timestamp")),
+            default=None
+        )
+        if latest_upload:
+            try:
+                if latest_upload.tzinfo is not None:
+                    age = datetime.now(latest_upload.tzinfo) - latest_upload
+                else:
+                    age = datetime.now() - latest_upload
+                if age >= timedelta(hours=24):
+                    await db.movie_updates.delete_one({"_id": base_name})
+                    movie_doc = None
+                    logger.info("24-hour movie grouping window expired for '%s'; creating a fresh post.", base_name)
+            except Exception:
+                logger.exception("Could not evaluate 24-hour grouping window for '%s'.", base_name)
     error_tmdb=False
     file_data = {
         "filename": filename,
