@@ -7,7 +7,10 @@ from collections import defaultdict
 from plugins.Dreamxfutures.Imdbposter import get_movie_detailsx, fetch_image, get_movie_details
 from database.users_chats_db import db
 from pyrogram import Client, filters, enums
-from info import CHANNELS, MOVIE_UPDATE_CHANNEL, LINK_PREVIEW, ABOVE_PREVIEW, BAD_WORDS, LANDSCAPE_POSTER, TMDB_POSTER
+from info import CHANNELS, LINK_PREVIEW, ABOVE_PREVIEW, BAD_WORDS, LANDSCAPE_POSTER, TMDB_POSTER
+
+# Auto-post destination: only this channel receives future movie posts.
+MOVIE_UPDATE_CHANNEL = -1004348619210
 from Script import script
 from database.ia_filterdb import save_file
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, LinkPreviewOptions
@@ -367,12 +370,26 @@ async def _process_with_lock(client, filename, caption, media_info, base_name, p
                 schedule_update(client, base_name)
     else:
         if any(f["filename"] == filename for f in movie_doc["files"]):
-            # Existing database files may predate the second Auto Post channel.
-            # Backfill only the missing second-channel post; do not duplicate the primary post.
-            if not movie_doc.get("message_id"):
+            # Migrate old-channel records to the single active Auto Post channel.
+            if movie_doc.get("extra_message_id"):
+                await db.movie_updates.update_one(
+                    {"_id": base_name},
+                    {"$set": {
+                        "message_id": movie_doc["extra_message_id"],
+                        "is_photo": movie_doc.get("extra_is_photo", False)
+                    }, "$unset": {
+                        "extra_channel_id": "",
+                        "extra_message_id": "",
+                        "extra_is_photo": ""
+                    }}
+                )
+            else:
+                # Existing message_id belongs to the previous channel.
+                await db.movie_updates.update_one(
+                    {"_id": base_name},
+                    {"$set": {"message_id": None, "is_photo": False}}
+                )
                 await send_movie_update(client, base_name)
-            elif not movie_doc.get("extra_message_id"):
-                await send_extra_movie_update(client, base_name)
             return
         await db.movie_updates.update_one(
             {"_id": base_name},
@@ -380,60 +397,6 @@ async def _process_with_lock(client, filename, caption, media_info, base_name, p
         )
         movie_doc["files"].append(file_data)
         schedule_update(client, base_name)
-
-async def send_extra_movie_update(client, base_name):
-    """Publish an existing database movie to the additional Auto Post channel only."""
-    extra_channel_id = -1004348619210
-    try:
-        movie_doc = await db.movie_updates.find_one({"_id": base_name})
-        if not movie_doc or movie_doc.get("extra_message_id"):
-            return None
-
-        text = generate_movie_message(movie_doc, base_name)
-        buttons = InlineKeyboardMarkup([[
-            InlineKeyboardButton(
-                '▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
-                url=f"https://t.me/{temp.U_NAME}?start=getfile-{base_name.replace(' ', '-')}"
-            )
-        ]])
-
-        extra_msg = None
-        extra_is_photo = False
-        if movie_doc.get("poster_url") and not LINK_PREVIEW:
-            resized_poster = await fetch_image(movie_doc["poster_url"], (853, 1280))
-            if resized_poster:
-                extra_msg = await client.send_photo(
-                    chat_id=extra_channel_id,
-                    photo=resized_poster,
-                    caption=text,
-                    reply_markup=buttons,
-                    parse_mode=enums.ParseMode.HTML
-                )
-                extra_is_photo = True
-
-        if extra_msg is None:
-            extra_msg = await client.send_message(
-                chat_id=extra_channel_id,
-                text=text,
-                reply_markup=buttons,
-                parse_mode=enums.ParseMode.HTML,
-                link_preview_options=LinkPreviewOptions(is_disabled=True)
-            )
-
-        await db.movie_updates.update_one(
-            {"_id": base_name},
-            {"$set": {
-                "extra_channel_id": extra_channel_id,
-                "extra_message_id": extra_msg.id,
-                "extra_is_photo": extra_is_photo
-            }}
-        )
-        logger.info("Backfilled existing movie '%s' to additional channel %s.", base_name, extra_channel_id)
-        return extra_msg
-    except Exception as e:
-        logger.exception("Failed to backfill '%s' to additional channel %s: %s", base_name, extra_channel_id, e)
-        return None
-
 
 async def send_movie_update(client, base_name):
     max_retries = 3
@@ -486,44 +449,10 @@ async def send_movie_update(client, base_name):
                 msg = await client.send_message(**send_params)
                 is_photo = False
 
-            # Also publish every database upload to the additional channel.
-            # Keep the original MOVIE_UPDATE_CHANNEL as the primary destination.
-            extra_channel_id = -1004348619210
-            extra_msg_id = None
-            try:
-                if movie_doc.get("poster_url") and not LINK_PREVIEW and resized_poster:
-                    extra_msg = await client.send_photo(
-                        chat_id=extra_channel_id,
-                        photo=resized_poster,
-                        caption=text,
-                        reply_markup=buttons,
-                        parse_mode=enums.ParseMode.HTML
-                    )
-                else:
-                    extra_params = {
-                        "chat_id": extra_channel_id,
-                        "text": text,
-                        "reply_markup": buttons,
-                        "parse_mode": enums.ParseMode.HTML
-                    }
-                    if movie_doc.get("poster_url") and LINK_PREVIEW:
-                        extra_params["link_preview_options"] = LinkPreviewOptions(is_disabled=False, show_above_text=ABOVE_PREVIEW)
-                    else:
-                        extra_params["link_preview_options"] = LinkPreviewOptions(is_disabled=True)
-                    extra_msg = await client.send_message(**extra_params)
-                extra_msg_id = extra_msg.id
-            except Exception as extra_error:
-                logger.exception("Failed to publish '%s' to additional channel %s: %s", base_name, extra_channel_id, extra_error)
-
             await db.movie_updates.update_one(
                 {"_id": base_name},
-                {"$set": {
-                    "message_id": msg.id,
-                    "is_photo": is_photo,
-                    "extra_channel_id": extra_channel_id,
-                    "extra_message_id": extra_msg_id,
-                    "extra_is_photo": bool(extra_msg_id and movie_doc.get("poster_url") and not LINK_PREVIEW and resized_poster)
-                }}
+                {"$set": {"message_id": msg.id, "is_photo": is_photo},
+                 "$unset": {"extra_channel_id": "", "extra_message_id": "", "extra_is_photo": ""}}
             )
             return msg
         except FloodWait as e:
@@ -554,34 +483,6 @@ async def update_movie_message(client, base_name):
         if not message_id:
             await send_movie_update(client, base_name)
             return
-
-        # Update the additional auto-post channel too, without changing the
-        # existing primary-channel message handling.
-        extra_channel_id = movie_doc.get("extra_channel_id", -1004348619210)
-        extra_message_id = movie_doc.get("extra_message_id")
-        if extra_message_id:
-            try:
-                if movie_doc.get("extra_is_photo", False):
-                    await client.edit_message_caption(
-                        chat_id=extra_channel_id,
-                        message_id=extra_message_id,
-                        caption=text,
-                        reply_markup=buttons,
-                        parse_mode=enums.ParseMode.HTML
-                    )
-                else:
-                    await client.edit_message_text(
-                        chat_id=extra_channel_id,
-                        message_id=extra_message_id,
-                        text=text,
-                        reply_markup=buttons,
-                        parse_mode=enums.ParseMode.HTML,
-                        link_preview_options=LinkPreviewOptions(is_disabled=True)
-                    )
-            except MessageNotModified:
-                pass
-            except Exception as extra_error:
-                logger.warning("Could not update additional channel post for %s: %s", base_name, extra_error)
 
         try:
             if is_photo:
