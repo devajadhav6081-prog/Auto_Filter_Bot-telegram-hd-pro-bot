@@ -31,6 +31,27 @@ logger = logging.getLogger(__name__)
 BATCH_FILES = {}
 REQUEST_INVITE_LINK_CACHE: dict[int, str] = {}
 
+async def notify_daily_file_status(client, user_id: int):
+    count = await db.increment_daily_file_count(user_id)
+    if count <= 3:
+        remaining = 3 - count
+        text = (
+            f"🎁 ꜰʀᴇᴇ ꜰɪʟᴇ {count}/7 — ɴᴏ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ɴᴇᴇᴅᴇᴅ!\\n"
+            f"{remaining} ꜰʀᴇᴇ ꜰɪʟᴇ(s) ʟᴇꜰᴛ ʙᴇꜰᴏʀᴇ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ꜱᴛᴀʀᴛꜱ."
+        )
+    elif count < 7:
+        remaining = 7 - count
+        text = (
+            f"🎁 ꜰʀᴇᴇ ꜰɪʟᴇ {count}/7 — ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ᴄᴏᴍᴘʟᴇᴛᴇ!\\n"
+            f"{remaining} ꜰɪʟᴇ(s) ʟᴇꜰᴛ ᴛᴏᴅᴀʏ."
+        )
+    else:
+        text = (
+            "🎁 ꜰʀᴇᴇ ꜰɪʟᴇ 7/7 — ᴛᴏᴅᴀʏ'ꜱ ʟɪᴍɪᴛ ᴄᴏᴍᴘʟᴇᴛᴇ!\\n"
+            "ɴᴇxᴛ ғʀᴇᴇ ғɪʟᴇꜱ ᴡɪʟʟ ʙᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏᴍᴏʀʀᴏᴡ."
+        )
+    await client.send_message(chat_id=user_id, text=text)
+
 
 @Client.on_message(filters.command("start") & filters.incoming)
 async def start(client, message):
@@ -313,51 +334,49 @@ async def start(client, message):
             return
 
         user_id = m.from_user.id
-        if not await db.has_premium_access(user_id):
+        is_premium = await db.has_premium_access(user_id)
+        daily_file_count = 0
+        if not is_premium:
+            daily_file_count = await db.get_daily_file_count(user_id)
+            if daily_file_count >= 7:
+                return await message.reply_text(
+                    "🎁 ᴀᴀᴊ ᴋɪ 7/7 ꜰʀᴇᴇ ꜰɪʟᴇ ʟɪᴍɪᴛ ᴘᴜʀɪ ʜᴏ ɢᴀʏɪ ʜᴀɪ.\\nᴋʀɪᴘʏᴀ ᴋᴀʟ ᴅᴏʙᴀʀᴀ ᴛʀʏ ᴋᴀʀᴇɪɴ."
+                )
             try:
                 grp_id = int(grp_id)
                 settings = await get_settings(grp_id)
-                if IS_VERIFY or settings.get("is_verify", False):
-                    user_verified, is_second_shortener, is_third_shortener = await asyncio.gather(
-                        db.is_user_verified(user_id),
-                        db.use_second_shortener(user_id, settings.get('verify_time', TWO_VERIFY_GAP)),
-                        db.use_third_shortener(user_id, settings.get('third_verify_time', THREE_VERIFY_GAP))
-                    )
-                    if not user_verified or is_second_shortener or is_third_shortener:
+                if (IS_VERIFY or settings.get("is_verify", False)) and daily_file_count >= 3:
+                    user_verified = await db.is_user_verified(user_id)
+                    if not user_verified:
                         verify_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=7))
                         await db.create_verify_id(user_id, verify_id)
                         temp.VERIFICATIONS[user_id] = grp_id
                         if message.command[1].startswith('allfiles'):
-                            verify = await get_shortlink(f"https://telegram.me/{temp.U_NAME}?start=sendall_{user_id}_{verify_id}_{file_id}", grp_id, is_second_shortener, is_third_shortener)
+                            verify = await get_shortlink(f"https://telegram.me/{temp.U_NAME}?start=sendall_{user_id}_{verify_id}_{file_id}", grp_id, False, False)
                         else:
-                            verify = await get_shortlink(f"https://telegram.me/{temp.U_NAME}?start=notcopy_{user_id}_{verify_id}_{file_id}", grp_id, is_second_shortener, is_third_shortener)
-                        if is_third_shortener:
-                            howtodownload = settings.get('tutorial_3', TUTORIAL_3)
-                        else:
-                            howtodownload = settings.get('tutorial_2', TUTORIAL_2) if is_second_shortener else settings.get('tutorial', TUTORIAL)
+                            verify = await get_shortlink(f"https://telegram.me/{temp.U_NAME}?start=notcopy_{user_id}_{verify_id}_{file_id}", grp_id, False, False)
+                        howtodownload = settings.get('tutorial', TUTORIAL)
                         buttons = [[
                             InlineKeyboardButton(text="♻️ ᴄʟɪᴄᴋ ʜᴇʀᴇ ᴛᴏ ᴠᴇʀɪꜰʏ ♻️", url=verify)
                         ],[
                             InlineKeyboardButton(text="⁉️ ʜᴏᴡ ᴛᴏ ᴠᴇʀɪꜰʏ ⁉️", url=howtodownload)
                         ]]
-                        reply_markup=InlineKeyboardMarkup(buttons)
-                        if await db.user_verified(user_id): 
-                            msg = script.THIRDT_VERIFICATION_TEXT
-                        else:            
-                            msg = script.SECOND_VERIFICATION_TEXT if is_second_shortener else script.VERIFICATION_TEXT
                         n=await m.reply_text(
-                            text=msg.format(message.from_user.mention),
-                            protect_content = True,
-                            reply_markup=reply_markup,
+                            text=(
+                                "🎁 3/3 ғʀᴇᴇ ꜰɪʟᴇꜱ ᴜꜱᴇᴅ!\\n"
+                                "ᴀɢʟɪ 4 ꜰɪʟᴇꜱ ᴘᴀᴀɴᴇ ᴋᴇ ʟɪʏᴇ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ᴘᴜʀᴀ ᴋᴀʀᴇɪɴ."
+                            ),
+                            protect_content=True,
+                            reply_markup=InlineKeyboardMarkup(buttons),
                             parse_mode=enums.ParseMode.HTML
                         )
-                        await asyncio.sleep(300) 
+                        await asyncio.sleep(300)
                         await n.delete()
                         await m.delete()
                         return
             except Exception as e:
-                logger.error("Error In Verification: %s", e)
-                pass
+                logger.exception("Error in daily verification gate: %s", e)
+                return await message.reply_text("⚠️ Verification abhi complete nahi ho paaya. Kripya thodi der baad dobara try karein.")
 
         files_ = await file_details_task
         if data.startswith("allfiles"):
@@ -365,6 +384,11 @@ async def start(client, message):
                 files = temp.GETALL.get(file_id)
                 if not files:
                     return await message.reply('<b><i>ɴᴏ ꜱᴜᴄʜ ꜰɪʟᴇ ᴇxɪꜱᴛꜱ !</b></i>')
+                if not is_premium:
+                    remaining_slots = max(0, 7 - await db.get_daily_file_count(user_id))
+                    files = files[:remaining_slots]
+                    if not files:
+                        return await message.reply_text("🎁 ᴀᴀᴊ ᴋɪ 7/7 ꜰʀᴇᴇ ꜰɪʟᴇ ʟɪᴍɪᴛ ᴘᴜʀɪ ʜᴏ ɢᴀʏɪ ʜᴀɪ. ᴋᴀʟ ᴅᴏʙᴀʀᴀ ᴛʀʏ ᴋᴀʀᴇɪɴ.")
                 send_allfiles = []
                 cover = None
                 for file in files:
@@ -404,6 +428,8 @@ async def start(client, message):
                             reply_markup=InlineKeyboardMarkup(btn)
                         )
                     send_allfiles.append(msg)
+                    if not is_premium:
+                        await notify_daily_file_status(client, user_id)
                 k = await client.send_message(chat_id=message.from_user.id, text=script.DEL_MSG.format(get_time(DELETE_TIME)), parse_mode=enums.ParseMode.HTML)
 
                 await asyncio.sleep(DELETE_TIME)
@@ -460,7 +486,11 @@ async def start(client, message):
                         logger.warning("Failed to format caption: %s", e)
                         f_caption = f"<code>{title}</code>"
                 await msg.edit_caption(f_caption, reply_markup=InlineKeyboardMarkup(btn))
-                k = await msg.reply(script.DEL_MSG.format(get_time(DELETE_TIME)), parse_mode=enums.ParseMode.HTML)
+                if not is_premium:
+                    await notify_daily_file_status(client, user_id)
+                if not is_premium:
+            await notify_daily_file_status(client, user_id)
+        k = await msg.reply(script.DEL_MSG.format(get_time(DELETE_TIME)), parse_mode=enums.ParseMode.HTML)
                 await asyncio.sleep(DELETE_TIME)
                 await msg.delete()
                 await k.edit_text("<b>ʏᴏᴜʀ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ɪꜱ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ !!</b>")
