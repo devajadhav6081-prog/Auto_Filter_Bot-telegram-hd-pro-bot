@@ -36,7 +36,7 @@ async def notify_daily_file_status(client, user_id: int):
     if count <= 3:
         remaining = 3 - count
         text = (
-            f"🎁 ꜰʀᴇᴇ ꜰɪʟᴇ {count}/7 — ɴᴏ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ɴᴇᴇᴅᴇᴅ!\\n"
+            f"🎁 ꜰʀᴇᴇ ꜰɪʟᴇ {count}/3 — ɴᴏ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ɴᴇᴇᴅᴇᴅ!\\n"
             f"{remaining} ꜰʀᴇᴇ ꜰɪʟᴇ(s) ʟᴇꜰᴛ ʙᴇꜰᴏʀᴇ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ꜱᴛᴀʀᴛꜱ."
         )
     elif count < 7:
@@ -336,8 +336,10 @@ async def start(client, message):
         user_id = m.from_user.id
         is_premium = await db.has_premium_access(user_id)
         daily_file_count = 0
+        verified_today = False
         if not is_premium:
             daily_file_count = await db.get_daily_file_count(user_id)
+            verified_today = await db.is_user_verified(user_id)
             if daily_file_count >= 7:
                 return await message.reply_text(
                     "🎁 ᴀᴀᴊ ᴋɪ 7/7 ꜰʀᴇᴇ ꜰɪʟᴇ ʟɪᴍɪᴛ ᴘᴜʀɪ ʜᴏ ɢᴀʏɪ ʜᴀɪ.\\nᴋʀɪᴘʏᴀ ᴋᴀʟ ᴅᴏʙᴀʀᴀ ᴛʀʏ ᴋᴀʀᴇɪɴ."
@@ -346,8 +348,7 @@ async def start(client, message):
                 grp_id = int(grp_id)
                 settings = await get_settings(grp_id)
                 if (IS_VERIFY or settings.get("is_verify", False)) and daily_file_count >= 3:
-                    user_verified = await db.is_user_verified(user_id)
-                    if not user_verified:
+                    if not verified_today:
                         verify_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=7))
                         await db.create_verify_id(user_id, verify_id)
                         temp.VERIFICATIONS[user_id] = grp_id
@@ -385,7 +386,7 @@ async def start(client, message):
                 if not files:
                     return await message.reply('<b><i>ɴᴏ ꜱᴜᴄʜ ꜰɪʟᴇ ᴇxɪꜱᴛꜱ !</b></i>')
                 if not is_premium:
-                    remaining_slots = max(0, 7 - await db.get_daily_file_count(user_id))
+                    remaining_slots = max(0, (7 if verified_today else 3) - await db.get_daily_file_count(user_id))
                     files = files[:remaining_slots]
                     if not files:
                         return await message.reply_text("🎁 ᴀᴀᴊ ᴋɪ 7/7 ꜰʀᴇᴇ ꜰɪʟᴇ ʟɪᴍɪᴛ ᴘᴜʀɪ ʜᴏ ɢᴀʏɪ ʜᴀɪ. ᴋᴀʟ ᴅᴏʙᴀʀᴀ ᴛʀʏ ᴋᴀʀᴇɪɴ.")
