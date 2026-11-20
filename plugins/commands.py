@@ -489,9 +489,7 @@ async def start(client, message):
                 await msg.edit_caption(f_caption, reply_markup=InlineKeyboardMarkup(btn))
                 if not is_premium:
                     await notify_daily_file_status(client, user_id)
-                if not is_premium:
-            await notify_daily_file_status(client, user_id)
-        k = await msg.reply(script.DEL_MSG.format(get_time(DELETE_TIME)), parse_mode=enums.ParseMode.HTML)
+                k = await msg.reply(script.DEL_MSG.format(get_time(DELETE_TIME)), parse_mode=enums.ParseMode.HTML)
                 await asyncio.sleep(DELETE_TIME)
                 await msg.delete()
                 await k.edit_text("<b>ʏᴏᴜʀ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ɪꜱ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ !!</b>")
