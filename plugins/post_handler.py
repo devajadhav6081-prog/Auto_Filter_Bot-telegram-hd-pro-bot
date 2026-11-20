@@ -46,11 +46,11 @@ TEMPLATES = {
 
 **Plot Summary**:
 {plot}""",
-    "divider_list": """🎬 <b>{title} {year}</b>
-━━━━━━━━━━━━━━━━━━
-➥ <b>Rating :</b> <code>★ {rating}/10</code>
-➥ <b>Genres :</b> <code>{genres}</code>
-""",
+    "divider_list": """🎬 <b>{title}</b>
+
+📺 <b>𝗪𝗮𝘁𝗰𝗵 𝗡𝗼𝘄 𝗙𝗼𝗿 𝗙𝗿𝗲𝗲!</b>
+━━━━━━━━━━━━━━━━━━━
+🤖 <b>𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆 @{bot_username}</b>""",
 
     "dashed_box": """- - - - - - - - - - - - - - - - - -
 🎥 <b>{title}</b>
@@ -177,7 +177,7 @@ async def start_post_session(client: Client, message: Message, user_id: int, mov
         movie_year = re.sub(r"[ *:\.]", "-", movie_year)
         url = f"https://telegram.me/{temp.U_NAME}?start=getfile-{movie_year}"
         post_sessions[user_id]["buttons"].append(
-            [InlineKeyboardButton("📥 Get Files 📥", url=url)])
+            [InlineKeyboardButton("⬇️ Dᴏᴡɴʟᴏᴀᴅ / Wᴀᴛᴄʜ Nᴏᴡ ▶️", url=url)])
         logger.info(f"Default 'Get Files' button added for session {user_id}")
 
     await update_post_preview(client, user_id, message.chat.id, force_resend=True)
@@ -196,6 +196,7 @@ async def _build_final_post_content(session: dict, session_id: int):
             rating=movie_details.get("rating", "N/A"),
             genres=genres_str,
             plot=movie_details.get("plot", "N/A"),
+            bot_username=temp.U_NAME,
         )
 
     final_caption = session["caption"]
@@ -457,7 +458,7 @@ async def handle_add_get_files(session):
         movie_year = f"{title} {year}".strip()
         url = f"https://telegram.me/{temp.U_NAME}?start=getfile-{movie_year.replace(' ', '-')}"
         session["buttons"].append(
-            [InlineKeyboardButton("📥 Get Files 📥", url=url)])
+            [InlineKeyboardButton("⬇️ Dᴏᴡɴʟᴏᴀᴅ / Wᴀᴛᴄʜ Nᴏᴡ ▶️", url=url)])
 
 
 async def handle_edit_caption(client: Client, query: CallbackQuery, session: dict):
