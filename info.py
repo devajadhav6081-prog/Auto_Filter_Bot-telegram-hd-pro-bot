@@ -206,16 +206,16 @@ TUTORIAL_2 = environ.get("TUTORIAL_2", "")
 TUTORIAL_3 = environ.get("TUTORIAL_3", "")
 
 # Primary Shortener
-SHORTENER_WEBSITE = environ.get("SHORTENER_WEBSITE", "7525f025a9de947893f1735b206e2c56c980094b")
-SHORTENER_API = environ.get("SHORTENER_API", "arolinks.com")
+SHORTENER_WEBSITE = environ.get("SHORTENER_WEBSITE", "arolinks.com")
+SHORTENER_API = environ.get("SHORTENER_API", "2a1add8623eed1c0e88d7e3b145dc104e605cfe5")
 
 # Secondary Shortener
-SHORTENER_WEBSITE2 = environ.get("SHORTENER_WEBSITE2", "7525f025a9de947893f1735b206e2c56c980094b")
-SHORTENER_API2 = environ.get("SHORTENER_API2", "arolinks.com")
+SHORTENER_WEBSITE2 = environ.get("SHORTENER_WEBSITE2", "arolinks.com")
+SHORTENER_API2 = environ.get("SHORTENER_API2", "2a1add8623eed1c0e88d7e3b145dc104e605cfe5")
 
 # Tertiary Shortener
-SHORTENER_WEBSITE3 = environ.get("SHORTENER_WEBSITE3", "7525f025a9de947893f1735b206e2c56c980094b")
-SHORTENER_API3 = environ.get("SHORTENER_API3", "arolinks.com")
+SHORTENER_WEBSITE3 = environ.get("SHORTENER_WEBSITE3", "arolinks.com")
+SHORTENER_API3 = environ.get("SHORTENER_API3", "2a1add8623eed1c0e88d7e3b145dc104e605cfe5")
 
 # Verification Time Gaps (in seconds)
 TWO_VERIFY_GAP = int(environ.get('TWO_VERIFY_GAP', "1200"))       # 20 minutes
