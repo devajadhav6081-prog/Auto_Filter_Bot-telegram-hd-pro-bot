@@ -289,6 +289,37 @@ class Database:
         total_seconds = time_diff.total_seconds()
         return total_seconds <= seconds_since_midnight
 
+    async def get_daily_file_count(self, user_id):
+        """Return files delivered to this user today in the configured timezone."""
+        user_id = int(user_id)
+        today = datetime.datetime.now(TZ).date().isoformat()
+        user = await self.misc.find_one(
+            {"user_id": user_id},
+            {"daily_file_date": 1, "daily_file_count": 1}
+        )
+        if not user or user.get("daily_file_date") != today:
+            return 0
+        return int(user.get("daily_file_count", 0))
+
+    async def increment_daily_file_count(self, user_id, amount=1):
+        """Increment today's delivered-file count."""
+        user_id = int(user_id)
+        today = datetime.datetime.now(TZ).date().isoformat()
+        await self.misc.update_one(
+            {"user_id": user_id},
+            {"$setOnInsert": {"user_id": user_id}},
+            upsert=True
+        )
+        await self.misc.update_one(
+            {"user_id": user_id, "daily_file_date": {"$ne": today}},
+            {"$set": {"daily_file_date": today, "daily_file_count": 0}}
+        )
+        await self.misc.update_one(
+            {"user_id": user_id, "daily_file_date": today},
+            {"$inc": {"daily_file_count": int(amount)}}
+        )
+        return await self.get_daily_file_count(user_id)
+
     async def user_verified(self, user_id):
         user = await self.get_notcopy_user(user_id)
         try:
