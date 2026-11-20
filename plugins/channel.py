@@ -367,9 +367,12 @@ async def _process_with_lock(client, filename, caption, media_info, base_name, p
                 schedule_update(client, base_name)
     else:
         if any(f["filename"] == filename for f in movie_doc["files"]):
-            # Recover a missing channel post for files that were indexed earlier.
+            # Existing database files may predate the second Auto Post channel.
+            # Backfill only the missing second-channel post; do not duplicate the primary post.
             if not movie_doc.get("message_id"):
                 await send_movie_update(client, base_name)
+            elif not movie_doc.get("extra_message_id"):
+                await send_extra_movie_update(client, base_name)
             return
         await db.movie_updates.update_one(
             {"_id": base_name},
@@ -377,6 +380,60 @@ async def _process_with_lock(client, filename, caption, media_info, base_name, p
         )
         movie_doc["files"].append(file_data)
         schedule_update(client, base_name)
+
+async def send_extra_movie_update(client, base_name):
+    """Publish an existing database movie to the additional Auto Post channel only."""
+    extra_channel_id = -1004348619210
+    try:
+        movie_doc = await db.movie_updates.find_one({"_id": base_name})
+        if not movie_doc or movie_doc.get("extra_message_id"):
+            return None
+
+        text = generate_movie_message(movie_doc, base_name)
+        buttons = InlineKeyboardMarkup([[
+            InlineKeyboardButton(
+                '▶️ ᴡᴀᴛᴄʜ / ᴅᴏᴡɴʟᴏᴀᴅ',
+                url=f"https://t.me/{temp.U_NAME}?start=getfile-{base_name.replace(' ', '-')}"
+            )
+        ]])
+
+        extra_msg = None
+        extra_is_photo = False
+        if movie_doc.get("poster_url") and not LINK_PREVIEW:
+            resized_poster = await fetch_image(movie_doc["poster_url"], (853, 1280))
+            if resized_poster:
+                extra_msg = await client.send_photo(
+                    chat_id=extra_channel_id,
+                    photo=resized_poster,
+                    caption=text,
+                    reply_markup=buttons,
+                    parse_mode=enums.ParseMode.HTML
+                )
+                extra_is_photo = True
+
+        if extra_msg is None:
+            extra_msg = await client.send_message(
+                chat_id=extra_channel_id,
+                text=text,
+                reply_markup=buttons,
+                parse_mode=enums.ParseMode.HTML,
+                link_preview_options=LinkPreviewOptions(is_disabled=True)
+            )
+
+        await db.movie_updates.update_one(
+            {"_id": base_name},
+            {"$set": {
+                "extra_channel_id": extra_channel_id,
+                "extra_message_id": extra_msg.id,
+                "extra_is_photo": extra_is_photo
+            }}
+        )
+        logger.info("Backfilled existing movie '%s' to additional channel %s.", base_name, extra_channel_id)
+        return extra_msg
+    except Exception as e:
+        logger.exception("Failed to backfill '%s' to additional channel %s: %s", base_name, extra_channel_id, e)
+        return None
+
 
 async def send_movie_update(client, base_name):
     max_retries = 3
