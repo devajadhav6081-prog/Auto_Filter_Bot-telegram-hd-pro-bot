@@ -4,7 +4,7 @@ class script(object):
 <b>🤖 I AM <a href=https://t.me/{}>{}</a>,  ᴛʜᴇ ᴍᴏꜱᴛ ᴘᴏᴡᴇʀꜰᴜʟ Sᴛᴏʀʏ Tᴠ bot ʙᴏᴛ ᴡɪᴛʜ ᴘʀᴇᴍɪᴜᴍ ꜰᴇᴀᴛᴜʀᴇꜱ.</b>
 """
 
- GSTART_TXT = """<b></b>
+    GSTART_TXT = """<b></b>
 
 <b>ʜᴇʏ {},</b>
 
