@@ -1665,38 +1665,19 @@ async def auto_filter(client, msg, spoll=False):
 
                     for idx, file in enumerate(files, start=1):
                         cap += f"<b>\n{idx}. <a href='https://telegram.me/{temp.U_NAME}?start=file_{message.chat.id}_{file.file_id}'>[{get_size(file.file_size)}] {clean_filename(file.file_name)}\n</a></b>"
-        sent = None
-        try:
-            if imdb and imdb.get('poster'):
-                try:
-                    if TMDB_POSTER:
-                        photo = imdb.get('backdrop') if imdb.get('backdrop') and LANDSCAPE_POSTER else imdb.get('poster')
-                    else:
-                        photo = imdb.get('poster')
-                    sent = await message.reply_photo(photo=photo, caption=cap, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML)
-                    if m:
-                        await m.delete()
-                except (MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty):
-                    pic = imdb.get('poster')
-                    poster = pic.replace('.jpg', "._V1_UX360.jpg")
-                    sent = await message.reply_photo(photo=poster, caption=cap, reply_markup=InlineKeyboardMarkup(btn), parse_mode=enums.ParseMode.HTML)
-                    if m:
-                        await m.delete()
-                except Exception as e:
-                    logger.warning("Failed to send poster, falling back to text: %s", e)
-                    sent = await message.reply_text(text=cap, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML)
-                    if m:
-                        try:
-                            await m.delete()
-                        except Exception:
-                            pass
-            else:
-                sent = await message.reply_text(text=cap, reply_markup=InlineKeyboardMarkup(btn), link_preview_options=LinkPreviewOptions(is_disabled=True), parse_mode=enums.ParseMode.HTML)
-                if m:
-                    await m.delete()
-        except Exception as e:
-            logger.exception("Failed to send result: %s", e)
-            return
+        # Keep posters/thumbnails out of bot search replies. Channel Auto Post
+        # is handled separately in plugins/channel.py and remains unchanged.
+        sent = await message.reply_text(
+            text=cap,
+            reply_markup=InlineKeyboardMarkup(btn),
+            link_preview_options=LinkPreviewOptions(is_disabled=True),
+            parse_mode=enums.ParseMode.HTML
+        )
+        if m:
+            try:
+                await m.delete()
+            except Exception:
+                pass
         try:
             if settings.get('auto_delete'):
                 asyncio.create_task(_schedule_delete(sent, message, DELETE_TIME))
