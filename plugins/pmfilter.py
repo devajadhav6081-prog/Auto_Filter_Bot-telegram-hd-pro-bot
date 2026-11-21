@@ -1186,6 +1186,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
             gtxt = "ɢᴏᴏᴅ ᴇᴠᴇɴɪɴɢ 🌘"
         else:
             gtxt = "ɢᴏᴏᴅ ɴɪɢʜᴛ 🌑"
+
+        welcome_text = script.START_TXT.format(
+            query.from_user.mention, gtxt, temp.U_NAME, temp.B_NAME
+        )
         try:
             if len(PICS) == 1:
                 PIC = PICS[0]
@@ -1194,18 +1198,31 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     PIC = f"{random.choice(PICS_URL)}?r={get_random_mix_id()}"
                 except Exception:
                     PIC = random.choice(PICS)
+
+            # Restore the complete home screen (photo, welcome caption and buttons).
             await client.edit_message_media(
-                query.message.chat.id,
-                query.message.id,
-                InputMediaPhoto(PIC)
+                chat_id=query.message.chat.id,
+                message_id=query.message.id,
+                media=InputMediaPhoto(
+                    media=PIC,
+                    caption=welcome_text,
+                    parse_mode=enums.ParseMode.HTML
+                ),
+                reply_markup=reply_markup
             )
         except Exception:
-            pass
-        await query.message.edit_text(
-            text=script.START_TXT.format(query.from_user.mention, gtxt, temp.U_NAME, temp.B_NAME),
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
-        )
+            # If the current Help screen is text-only, replace it with the home photo.
+            home_message = await client.send_photo(
+                chat_id=query.message.chat.id,
+                photo=PIC,
+                caption=welcome_text,
+                reply_markup=reply_markup,
+                parse_mode=enums.ParseMode.HTML
+            )
+            try:
+                await query.message.delete()
+            except Exception:
+                pass
         await query.answer(MSG_ALRT)
 
     elif query.data == "donation":
