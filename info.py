@@ -76,9 +76,9 @@ AUTH_USERS = (auth_users + ADMINS) if auth_users else []
 PREMIUM_USER = [int(user) if id_pattern.search(user) else user for user in environ.get('PREMIUM_USER', '-1003994332566').split()]
 
 # Social & Community Links
-GRP_LNK = environ.get('GRP_LNK', 'https://t.me/+y9h1tvj0jpg5Y2Q1')
-OWNER_LNK = environ.get('OWNER_LNK', 'https://t.me/+y9h1tvj0jpg5Y2Q1')
-UPDATE_CHNL_LNK = environ.get('UPDATE_CHNL_LNK', 'https://t.me/+y9h1tvj0jpg5Y2Q1')
+GRP_LNK = environ.get('GRP_LNK', 'https://t.me/Story_TV_Shows_Free')
+OWNER_LNK = environ.get('OWNER_LNK', 'https://t.me/Story_TV_Shows_Free')
+UPDATE_CHNL_LNK = environ.get('UPDATE_CHNL_LNK', 'https://t.me/Story_TV_Shows_Free')
 
 
 # ==============================================================================
