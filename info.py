@@ -103,7 +103,7 @@ if not MULTIPLE_DB:
 # ==============================================================================
 # UI Banner & Poster Images
 PICS_URL = (environ.get('PICS_URL', 'https://api.aniwallpaper.workers.dev/random?type=girl')).split()
-PICS = (environ.get('PICS', 'https://i.ibb.co/39Rv09WY/photo-2026-11-13-09-37-20-7707587879488192528.jpg')).split()
+PICS = (environ.get('PICS', 'https://i.ibb.co/nqYxQwQQ/photo-2026-11-21-03-41-53-7710464966410633232.jpg')).split()
 NOR_IMG = environ.get("NOR_IMG", "https://graph.org/file/e20b5fdaf217252964202.jpg")
 MELCOW_PHOTO = environ.get("MELCOW_PHOTO", "https://i.ibb.co/nqYxQwQQ/photo-2026-11-21-03-41-53-7710464966410633232.jpg")
 SPELL_IMG = environ.get("SPELL_IMG", "https://graph.org/file/13702ae26fb05df52667c.jpg")
