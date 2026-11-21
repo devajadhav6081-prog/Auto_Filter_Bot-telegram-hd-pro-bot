@@ -276,7 +276,7 @@ Mᴇꜱꜱᴀɢᴇ : <b>{}</b>"""
 🤖 𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆 @{bot_username} 🔍"""
 
 
-    IMDB_TEMPLATE_TXT = """<b><a href={url}>{title}</a> (<a href={url}/releaseinfo>{year}</a>)</b>
+    IMDB_TEMPLATE_TXT = """<b><a href={url}>{default_caption}</a> (<a href={url}/releaseinfo>{year}</a>)</b>
 
 ʀᴀᴛɪɴɢ : <a href={url}/ratings>{rating}</a>
 ɢᴇɴʀᴇ : {genres}
