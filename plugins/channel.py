@@ -291,7 +291,7 @@ async def poster_handler(client, message):
             return
 
         base_name = movie_doc["_id"]
-        poster_file_id = message.photo[-1].file_id
+        poster_file_id = message.photo.file_id
         await db.movie_updates.update_one(
             {"_id": base_name, "pending_poster": True},
             {"$set": {
