@@ -271,6 +271,41 @@ async def media_handler(client, message):
     except Exception:
         logger.exception("Error processing media")
 
+
+@Client.on_message(filters.chat(CHANNELS) & filters.photo)
+async def poster_handler(client, message):
+    """Attach the next uploaded poster to the newest movie waiting for one."""
+    try:
+        if not message.photo:
+            return
+
+        if not hasattr(db, "movie_updates"):
+            db.movie_updates = db.db.movie_updates
+
+        movie_doc = await db.movie_updates.find_one(
+            {"manual_poster_required": True, "pending_poster": True},
+            sort=[("created_at", -1)]
+        )
+        if not movie_doc:
+            logger.info("Poster received but no movie is waiting for a poster.")
+            return
+
+        base_name = movie_doc["_id"]
+        poster_file_id = message.photo[-1].file_id
+        await db.movie_updates.update_one(
+            {"_id": base_name, "pending_poster": True},
+            {"$set": {
+                "poster_file_id": poster_file_id,
+                "pending_poster": False,
+                "poster_message_id": message.id
+            }}
+        )
+        logger.info("Poster attached to '%s'; publishing channel post.", base_name)
+        await send_movie_update(client, base_name)
+    except Exception:
+        logger.exception("Error attaching uploaded poster")
+
+
 async def process_and_send_update(client, filename, caption):
     try:
         media_info = extract_media_info(filename, caption)
@@ -371,11 +406,15 @@ async def _process_with_lock(client, filename, caption, media_info, base_name, p
             "message_id": None,
             "is_photo": False,
             "error_tmdb": error_tmdb,
-            "is_backdrop": details.get("backdrop_url")
+            "is_backdrop": details.get("backdrop_url"),
+            "manual_poster_required": True,
+            "pending_poster": True,
+            "poster_file_id": None,
+            "created_at": datetime.now()
         }
         try:
             await db.movie_updates.insert_one(movie_doc)
-            await send_movie_update(client, base_name)
+            logger.info("Movie '%s' saved; waiting for its manually uploaded poster.", base_name)
             movie_doc = await db.movie_updates.find_one({"_id": base_name})
         except DuplicateKeyError:
             movie_doc = await db.movie_updates.find_one({"_id": base_name})
@@ -433,9 +472,23 @@ async def send_movie_update(client, base_name):
                     url=f"https://t.me/{temp.U_NAME}?start=getfile-{base_name.replace(' ', '-')}"
                 )
             ]])
-            # Keep every auto-post poster in the same portrait format.
-            size = (853, 1280)
-            if movie_doc.get("poster_url") and not LINK_PREVIEW:
+            # New uploads require the poster uploaded manually after the movie.
+            # Existing legacy records keep their previous TMDB/IMDb poster behavior.
+            if movie_doc.get("manual_poster_required"):
+                poster_file_id = movie_doc.get("poster_file_id")
+                if not poster_file_id:
+                    logger.info("Skipping channel post for '%s': waiting for poster.", base_name)
+                    return None
+                msg = await client.send_photo(
+                    chat_id=MOVIE_UPDATE_CHANNEL,
+                    photo=poster_file_id,
+                    caption=text,
+                    reply_markup=buttons,
+                    parse_mode=enums.ParseMode.HTML
+                )
+                is_photo = True
+            # Keep legacy auto-post poster behavior unchanged.
+            elif movie_doc.get("poster_url") and not LINK_PREVIEW:
                 resized_poster = await fetch_image(movie_doc["poster_url"], size)
                 if resized_poster:
                     msg = await client.send_photo(
