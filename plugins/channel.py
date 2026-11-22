@@ -452,10 +452,19 @@ async def _process_with_lock(client, filename, caption, media_info, base_name, p
             return
         await db.movie_updates.update_one(
             {"_id": base_name},
-            {"$push": {"files": file_data}}
+            {"$push": {"files": file_data},
+             "$set": {
+                 "manual_poster_required": True,
+                 "pending_poster": True,
+                 "poster_file_id": None,
+                 "poster_message_id": None,
+                 "created_at": datetime.now(),
+                 "message_id": None,
+                 "is_photo": False
+             }}
         )
         movie_doc["files"].append(file_data)
-        schedule_update(client, base_name)
+        logger.info("New file added to '%s'; waiting for its manually uploaded poster.", base_name)
 
 async def send_movie_update(client, base_name):
     max_retries = 3
