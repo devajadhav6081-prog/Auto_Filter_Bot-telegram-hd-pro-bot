@@ -173,7 +173,7 @@ BAD_WORDS = {
     "PrivateMovieZ", "toonworld4all", "themoviesboss", "1tamilmv",
     "tamilblasters", "1tamilblasters", "skymovieshd", "extraflix",
     "hdm2", "moviesmod", "hdhub4u", "mkvcinemas", "primefix",
-    "join", "www", "villa", "tg", "original"
+    "join", "www", "villa", "tg", "original", "Mp4"
 }
 
 
