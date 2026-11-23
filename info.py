@@ -77,7 +77,7 @@ PREMIUM_USER = [int(user) if id_pattern.search(user) else user for user in envir
 
 # Social & Community Links
 GRP_LNK = environ.get('GRP_LNK', 'https://t.me/Story_TV_Shows_Free')
-OWNER_LNK = environ.get('OWNER_LNK', 'https://t.me/Story_TV_Shows_Free')
+OWNER_LNK = environ.get('OWNER_LNK', 'https://t.me/+xhlBo2L61FZmMGQ1')
 UPDATE_CHNL_LNK = environ.get('UPDATE_CHNL_LNK', 'https://t.me/Story_TV_Shows_Free')
 
 
@@ -225,7 +225,7 @@ THREE_VERIFY_GAP = int(environ.get('THREE_VERIFY_GAP', "54000"))   # 15 hours
 # ==============================================================================
 # 8. PREMIUM PLANS & PAYMENT CONFIGURATION
 # ==============================================================================
-QR_CODE = environ.get('Request To QR_CODE', 'https://t.me/ironMan6081')
+QR_CODE = environ.get('Request To QR_CODE', 'https://t.me/+xhlBo2L61FZmMGQ1')
 OWNER_UPI_ID = environ.get('OWNER_UPI_ID', 'Dm To Admin ')
 
 # Stars / Premium Pricing Structure {Amount: "Duration"}
